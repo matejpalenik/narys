@@ -1,0 +1,17 @@
+# Python type system and language rules
+
+## Types and boundary contracts
+
+- Annotate parameters and return types, including private helpers with non-obvious contracts and `None` for no result. Type attributes when inference is insufficient. Use the selected type checker in strict mode for production code where feasible. Preserve the approved strict configuration. Do not confuse type annotations with runtime validation.
+- Use `list[T]`, `dict[K, V]`, `T | None`, `Self`, parameterized protocols and current generic syntax only when supported by the project's minimum Python version and dependencies. Use compatibility facilities for older targets only as needed. Do not raise the minimum version for syntactic preference.
+- Prefer domain-specific values, enums or literals for closed states and precise result types for boundaries. Use immutable structures when invariants depend on them. Prefer `Sequence`/`Mapping` or narrower read-only contracts when callers do not require mutation. Use a union only when its alternatives reflect actual valid inputs or outcomes.
+- Use `typing.Protocol` for structural dependency contracts. Prefer consumer-owned, small methods. Annotate input and output types accurately and verify implementations through the checker. A class need not inherit a structural protocol. Do not create interfaces for every concrete class. Use an ABC when shared behavior or nominal identity is necessary. `@runtime_checkable` is not a full runtime signature or behavior validator.
+- Avoid implicit or explicit `Any` in core contracts. Use `object` and safe narrowing for unknown data. Parse and validate at external boundaries (for example with an adopted validation library). An unchecked cast, `# type: ignore`, `assert` or `isinstance` against a runtime protocol is not a validation policy. If a third-party stub requires a narrow suppression, record reason and scope and keep it at the adapter. Do not broaden suppression to the whole module or checker configuration.
+
+## Naming and language behavior
+
+Use `snake_case` for modules, functions and methods, `PascalCase` for classes, `UPPER_CASE` for constants and names from the domain. Avoid obscure abbreviations. Use explicit imports and clear public exports. Avoid wildcard imports except a justified compatibility facade. Keep imports acyclic and free of IO, mutable runtime configuration or hidden registration where possible. Use `TYPE_CHECKING` only for typing dependencies, not to hide architectural violations.
+
+Avoid mutable default arguments, mutable global state, monkey-patching production code and broad `except:`. Use context managers for owned resources. Use `raise ... from ...` to preserve relevant causes when translating failures. Handle cancellation and cleanup correctly. Do not swallow exceptions to satisfy a test. Use async only where the approved integration or concurrency model benefits. Do not run blocking IO on the event loop. Keep sync/async interfaces coherent. Do not assume thread safety or atomicity from the interpreter or type system. Use explicit concurrency control when shared state requires it.
+
+Keep concise, ordinary Python expressions. Avoid clever metaprogramming, complex nested comprehensions, unnecessary inheritance or dynamic reflection when a typed operation suffices. PEP 8 naming and the adopted formatter determine mechanical style. The domain and architectural standards determine responsibility.

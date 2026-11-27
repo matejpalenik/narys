@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Software Factory repository policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "review",
+    "execution"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "default_route",
+        "automatic_candidates",
+        "human_required",
+        "required_checks",
+        "classifier",
+        "require_independent_review",
+        "first_slice_human_review",
+        "final_epic_human_review"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "human-review",
+            "risk-based",
+            "autonomous"
+          ]
+        },
+        "default_route": {
+          "const": "human_review"
+        },
+        "automatic_candidates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "human_required": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "change_classes",
+            "protected_paths"
+          ],
+          "properties": {
+            "change_classes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "protected_paths": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "required_checks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "issuer"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "issuer": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "classifier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "provider",
+            "model"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "disabled",
+                "shadow",
+                "advisory"
+              ]
+            },
+            "provider": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "model": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "shadow",
+                      "advisory"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "require_independent_review": {
+          "const": true
+        },
+        "first_slice_human_review": {
+          "type": "boolean"
+        },
+        "final_epic_human_review": {
+          "type": "boolean"
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_concurrent_issues",
+        "max_repair_attempts",
+        "max_transient_retries",
+        "max_runtime_minutes",
+        "repeated_failure_limit",
+        "max_cost_usd",
+        "on_budget_exhausted",
+        "on_architecture_deviation",
+        "on_scope_expansion",
+        "on_missing_verification"
+      ],
+      "properties": {
+        "max_concurrent_issues": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_repair_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_transient_retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_runtime_minutes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "repeated_failure_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_cost_usd": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "on_budget_exhausted": {
+          "const": "escalate"
+        },
+        "on_architecture_deviation": {
+          "const": "escalate"
+        },
+        "on_scope_expansion": {
+          "const": "escalate"
+        },
+        "on_missing_verification": {
+          "const": "block"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+schema_version: 1
+# Illustrative manifest. Replace example paths and terms with actual project values.
+id: PROP-001
+property: A purchase request cannot have conflicting terminal decisions.
+requirement_refs:
+  - SPEC-021
+  - REQ-014
+method: model-check
+tool:
+  name: TLC
+  version: null # Pin the actual installed version before verification.
+coverage:
+  paths:
+    - src/purchase/domain/**
+    - src/purchase/application/**
+    - src/purchase/persistence/**
+  symbols:
+    - PurchaseRequest.decide
+  protected_state:
+    - purchase request terminal decision
+  dependencies: [] # Include schema, transaction and shared writer dependencies.
+model: verification/purchase-decision.tla
+harness: null
+command: make verify-purchase-decision
+assumptions:
+  - Illustrative only. Establish storage atomicity from actual code.
+bounds:
+  - Illustrative only. Record actual state and interleaving bounds.
+verification_skill: null # Set the actual project-local skill path.
+last_synchronized: null # Git SHA of verified source snapshot, not the evidence-only commit.
+covered_inputs_digest: null
+status: draft # draft | design_only | synchronized | defect | blocked

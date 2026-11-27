@@ -1,0 +1,43 @@
+# Repository policy contract
+
+## Location and setup
+
+The versioned `.factory/policy.yaml` is the machine-readable authority for configurable review routes and execution budgets. `REVIEW.md` defines human-readable rationale, verification profiles and project-specific checks. If they conflict, stop. Do not use a candidate branch to change its own governing policy. Load the approved policy from a trusted base or an independently controlled policy store. The [template](policy.yaml) and [JSON Schema](policy.schema.json) define version 1. This is a project-specific format, not a GitHub-native configuration. The schema validates structure, not permission or safety.
+
+At factory preflight, search for an existing policy and enforcement mechanism. If no policy exists, offer to install the template and schema, configure `REVIEW.md`, and show the exact proposed files, protected paths, check identities and limits. Ask for explicit approval before writing. If any policy, schema, review document or enforcement configuration already exists, read it and show a migration/diff proposal only if needed. Never overwrite or silently merge it. If compatible, reuse it. Any authorized policy change requires human review and separate approval before it can govern a run. Do not enable automatic merging during bootstrap. Preserve project configuration and validate actual repository paths and check names. Set missing enforcement or unapproved configuration to blocked for auto-integration. A manually reviewed run with approved finite limits is permitted if other prerequisites are met.
+
+## Review evaluation
+
+Validate YAML with a safe parser (reject duplicate keys, unknown fields and unsupported schema versions) and the schema. Reject unsafe/ambiguous path patterns, missing required check identities, unknown routes, or contradictory settings. Evaluate protected paths against the full actual diff, including old and new names in renames. Match repository-relative paths using documented glob semantics (`*` within a segment and `**` across directories); evaluate all rules, never a first-match allow rule. Check semantic impact, not only paths. Human-required paths and classes take precedence over the allowlist. A new class is not auto-eligible until approved and evaluated. The default is human review. The template allowlist is a proposal, not a grant. For auto-candidates, require positive independent evidence that the entire change fits an approved class; uncertainty routes to a human. A documentation change to a binding requirement or normative specification is not descriptive documentation. Treat specification, architecture, ADR, interface contract, AGENTS.md and approval-control changes according to semantic impact and protected paths. Apply the [standards contract](standards.md). Changes to the adopted standards snapshot, material exceptions, architecture or language enforcement require human review. Unapproved material deviations block. Evaluate local skill sources and scoped instructions as protected controls, including paths not listed in the template. The trusted base, not candidate-controlled installed skill content, establishes the adopted profile. Block a material contradiction, stale approval or unresolved trusted hold. A change to any gate, policy, checker, required test, approval record, or worker privilege requires human review even if the paths are not listed. Changes to critical security or integrity behaviour also require human review.
+
+| Condition (in precedence order) | Route |
+|---|---|
+| Invalid approval, scope, policy, missing/failed required evidence or violation | `blocked` |
+| Mandatory human concern, unknown impact, human-review mode or unapproved automation | `human_review` |
+| Entire diff in approved auto class, all independent evidence and trusted controls present | `auto_candidate` |
+| Optional advisory classifier detects greater risk or cannot classify | Escalate to `human_review` or `blocked`; never lower scrutiny |
+
+A shadow classifier cannot affect routing. Advisory mode can only increase scrutiny. Missing or invalid advisory output routes to human review. Do not send secrets or unapproved source to external services. The trusted gate, not the model or worker, validates the route, authorized human approval if required, check issuer, approved epic/issue/dependency payloads, current scoped engineering baseline (including applicable standards identity and approved exceptions) and holds, policy revision, current candidate and base/merge revision. Validate on each change and at merge. Protect `.factory/`, `REVIEW.md`, CI and enforcement code from worker approval or bypass. Use GitHub required checks from an expected trusted app and branch protection where available. Never execute untrusted candidate code with gate credentials. An agent's classification is advisory until independently enforced. If there is no trusted gate, do not request automatic merge. A manual human review still cannot waive failed mandatory evidence without separate approved policy change.
+
+## Execution budgets
+
+| Field | Meaning |
+|---|---|
+| `max_concurrent_issues` | Maximum simultaneously claimed issues in the authorized run |
+| `max_repair_attempts` | Code correction attempts after the initial candidate, cumulative per approved issue |
+| `max_transient_retries` | Bounded retries of infrastructure/check execution without changing product code |
+| `max_runtime_minutes` | Cumulative elapsed execution time per issue, including CI waits while executing, excluding recorded human approval waits |
+| `repeated_failure_limit` | Maximum observations of the same normalized material failure before escalation without new diagnostic evidence |
+| `max_cost_usd` | Maximum cumulative metered cost per issue, including repairs and reviews; null means no configured monetary cap and requires explicit human authorization before execution |
+
+Resolve the effective limits at run approval. A human may impose stricter limits. Do not relax any limit during a run without new human authorization. Reserve attempts before dispatch and persist used/remaining budgets, normalized failure signatures, evidence, current revision, timing and cost outside ordinary worker control. A restarted context, PR update, new branch, or temporary infrastructure failure does not reset the budget. The runtime must enforce elapsed time and, when configured, cost. If metering or durable state is unavailable, block unattended execution. For a supervised session report actual limits and maintain an auditable record. Never claim limits are enforced by Markdown alone.
+
+A code repair requires a distinct, evidence-backed hypothesis, a focused within-scope change and fresh verification. Separate transient outages from product defects. Bound both retries. Stop on repeated failure without new evidence, exhausted budget, deviation, missing evidence or permission. A repair cannot remove or weaken a requirement, check, invariant, protected workflow or test to obtain a pass. Escalate with the exact issue, failed criterion, attempts, observed evidence and suggested next action. Do not reset budget without human decision.
+
+## Implementation boundary
+
+Use [setup-repository](../../setup-repository/SKILL.md) to propose and configure repository tooling, policy files and supported remote controls. It must report actual enforcement and must not assume a trusted evaluator or controller exists. Existing policies and approval records remain unchanged without authorization.
+
+These files specify the configuration contract. A policy parser/evaluator, structural reference validator, trusted approval and hold mechanism, durable counters, trusted gate, CI integration, credentials and notification delivery are repository/runtime prerequisites, not implemented by a skill or JSON Schema. Before any automatic integration, test invalid/stale policies, protected path changes, spoofed checks, classifier errors, exhausted budgets and changed candidate revisions. Use human review until the enforcement is demonstrably active. Persistent orchestration design is deferred.
+
+For UI-bearing projects use the [experience contract](experience-contract.md). The V7 proposed policy adds material experience/design-system changes to human-required classes and protects root EXPERIENCE.md, DESIGN.md and design records. Review actual shared token/component, visual baseline and adopted specialist paths and add protection as appropriate before unattended integration. Preserve existing policies until the human approves a compatible diff. No schema-version change is required. The trusted evaluator must enforce actual classifications, paths and required UI checks; advisory review is not sufficient.

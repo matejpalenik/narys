@@ -1,0 +1,21 @@
+# Conditional user-interface verification
+
+Use for changes that affect rendered interfaces, interaction flows, shared design tokens/components, stories or UX contracts. This is a scoped extension to existing V0–V4 verification profiles, not an additional maturity level or universal gate. Select checks by consequence. For non-UI changes, record non-applicability when needed. The [experience contract](experience-contract.md) owns scope and approvals; the approved `REVIEW.md` owns required evidence and actual commands.
+
+| Concern | Profile and method | Evidence |
+|---|---|---|
+| Source and contract fidelity | V0 inspection / configured checks | Relevant UX/SPEC/DS refs, actual token/component source and diff, supported APIs, scope and no duplicated implementation |
+| Component behavior | V1 Storybook or equivalent interaction tests | Relevant stories, actual user-observable assertions, adverse cases and exact result |
+| Visual consistency and robustness | V1 inspection / V2 rendered comparison as applicable | Representative compositions, approved visual reference, long labels, empty/missing data, failure and supported viewport/theme |
+| Accessibility | V1/V2 automated and manual | Accessible names, semantic roles, keyboard/focus, feedback, contrast, zoom/reflow, motion preference; applicable WCAG 2.2 criteria and limitations |
+| Integrated experience | V2 browser test / demonstration | Complete real task, route and data state, side effects, failure/recovery and approved acceptance scenario |
+| Critical UI/business guarantees | V3 when applicable | Property and correspondence evidence for state/permission integrity, not a screenshot |
+| Interaction performance | V4 when specified | Representative workload/device, metric, approved criterion, measured result; no invented budgets |
+
+Use a new independent review context where supported. Apply approved Impeccable, Emil, Jakub or Vercel specialist review guidance selectively; distinguish findings from taste and introduced defects from unrelated legacy observations. Review against the project's approved design, not an external style preference. Report defects by affected journey/rule, concrete path/story and reproduction. Do not mutate the reviewed candidate, update snapshots to make checks pass, or weaken accessibility or quality thresholds.
+
+For canvas/gesture interfaces, test keyboard access and a simple non-drag pointer path for operations where applicable, focus order and visibility, pan/zoom behavior, large node/edge sets, stale data and recoverable errors. Check [WCAG 2.2](https://www.w3.org/TR/WCAG22/) including dragging movements and applicable focus criteria. A WCAG 2.2 AA target is the default proposal for web UI; confirm applicable requirements with the human. Automated scanners detect some issues, not full compliance. Avoid color-only status and preserve reduced-motion support. Human-agent views must distinguish proposed, authorized, running, failed, integrated and verified states as specified; real operation status comes from actual evidence.
+
+Use the project's approved canonical commands and browser environment. Inspect output, not merely exit status when a check is advisory or skipped. Record candidate/base, fixture, story IDs, browser/viewport/theme, observed result and evidence path. For visual baselines, show actual differences and seek approval for a material new baseline. A snapshot update does not fix a defect. If required rendering, browser or integration evidence is unavailable, mark the check blocked and do not claim visual acceptance. Use supervised preview or an authorized repair to obtain it. See [Storybook accessibility tests](https://storybook.js.org/docs/writing-tests/accessibility-testing), [interaction tests](https://storybook.js.org/docs/writing-tests/interaction-testing) and [visual tests](https://storybook.js.org/docs/writing-tests/visual-testing).
+
+Example: AC-01 requires an operator to see a failed run and request recovery. Use a failed-run story for visible state and controls, a keyboard interaction test for access, and an integrated browser task to verify the approved recovery request and resulting state. The story alone does not establish that the real request was authorized or executed.

@@ -1,0 +1,59 @@
+schema_version: 1
+# Draft template. Human approval and trusted enforcement are required.
+review:
+  mode: human-review
+  default_route: human_review
+  automatic_candidates:
+    - descriptive-documentation
+    - formatting-only
+  human_required:
+    change_classes:
+      - authentication
+      - authorization
+      - tenant-isolation
+      - secrets-and-trust-boundaries
+      - financial-or-legal-commitments
+      - critical-business-invariants
+      - migrations-and-compatibility
+      - architecture-and-requirements
+      - experience-and-design-system
+      - verification-and-review-controls
+      - infrastructure-and-permissions
+    protected_paths:
+      - .factory/**
+      - .github/**
+      - REVIEW.md
+      - ARCHITECTURE.md
+      - SPEC.md
+      - EXPERIENCE.md
+      - DESIGN.md
+      - docs/design/**
+      - AGENTS.md
+      - "**/AGENTS.md"
+      - docs/specifications/**
+      - docs/requirements/**
+      - docs/adr/**
+      - docs/verification/**
+      - verification/**
+      - .agents/skills/**
+      - .codex/skills/**
+      - .claude/skills/**
+  required_checks: [] # Add actual check names and trusted issuers before automatic integration.
+  classifier:
+    mode: disabled # disabled | shadow | advisory
+    provider: null
+    model: null
+  require_independent_review: true
+  first_slice_human_review: true
+  final_epic_human_review: true
+execution:
+  max_concurrent_issues: 1
+  max_repair_attempts: 3
+  max_transient_retries: 2
+  max_runtime_minutes: 60
+  repeated_failure_limit: 2
+  max_cost_usd: null # Explicit human decision required for runs without a monetary cap.
+  on_budget_exhausted: escalate
+  on_architecture_deviation: escalate
+  on_scope_expansion: escalate
+  on_missing_verification: block

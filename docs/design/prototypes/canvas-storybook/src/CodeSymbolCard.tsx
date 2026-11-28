@@ -1,6 +1,6 @@
 import { ChangeMark, type ArchitectureChange } from "./architecture-visuals";
 
-const symbolMarks = { Class: "C", Function: "F", Call: "↗" } as const;
+const symbolMarks = { Class: "C", Interface: "I", Function: "F", Method: "M", Type: "T", Module: "□", Call: "↗" } as const;
 
 export interface CodeSymbol {
   name: string;

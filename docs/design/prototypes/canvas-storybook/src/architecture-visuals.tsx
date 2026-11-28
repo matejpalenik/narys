@@ -92,6 +92,9 @@ export const connectionNames = {
   async: "Asynchronous message",
   event: "Event publication",
   data: "Data dependency",
+  registration: "Registration",
+  configuration: "Configuration",
+  inheritance: "Inheritance",
   unknown: "Unconfirmed semantics",
 } as const;
 
@@ -134,7 +137,10 @@ export function ConnectionSample({ kind, removed = false }: { kind: ConnectionKi
     <svg className="connection-sample" viewBox="0 0 140 28" aria-hidden="true">
       <defs>
         <marker id={marker} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M1 1 7 4 1 7" fill="none" stroke="context-stroke" />
+          {kind === "inheritance"
+            ? <path d="M1 1 7 4 1 7Z" fill="var(--panel)" stroke="context-stroke" />
+            : <path d={kind === "configuration" ? "M1 4 4 1 7 4 4 7Z" : "M1 1 7 4 1 7"}
+              fill={kind === "configuration" ? "var(--panel)" : "none"} stroke="context-stroke" />}
         </marker>
       </defs>
       <circle cx="7" cy="14" r="3" fill="var(--panel)" stroke="var(--draft-line)" />

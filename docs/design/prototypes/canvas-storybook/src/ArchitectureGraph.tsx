@@ -4,28 +4,21 @@ import {
   getSmoothStepPath, type Edge, type EdgeProps, type Node, type NodeProps,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import { Box, Check, CircleHelp, Focus, Layers3, Minus, Plus, Server, ShoppingCart, Sparkles } from "lucide-react";
+import { Check, CircleHelp, Focus, Minus, Plus, Sparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { components, type ComponentId, type MapRevision, type Relationship } from "./fixture";
-import { ChangeMark, ConnectionSample, ConnectionStroke, connectionNames, type ArchitectureChange, type ConnectionKind } from "./architecture-visuals";
-import { ArchitectureNodeFace, paymentNodeChange, paymentNodeVisuals } from "./ArchitectureNodeFace";
+import type { MapRevision, OverviewNode, OverviewRelationship } from "./workspace-model";
+import { ChangeMark, ConnectionSample, ConnectionStroke, connectionNames, type ArchitectureChange } from "./architecture-visuals";
+import { ArchitectureNodeFace, NodeIdentityMark } from "./ArchitectureNodeFace";
 
 export type Direction = "dark" | "light";
-export type MapSelection = { kind: "component"; id: ComponentId } | { kind: "relationship"; relationship: Relationship };
+export type MapSelection = { kind: "component"; id: string } | { kind: "relationship"; relationship: OverviewRelationship };
 
 export function mapControlId(selection: MapSelection): string {
   return selection.kind === "component" ? `component-${selection.id}` : `relationship-${selection.relationship.id}`;
 }
 
-const icons = { checkout: ShoppingCart, api: Server, jobs: Layers3, worker: Box };
-const visiblePorts = { checkout: ["right", "bottom"], api: ["left", "bottom"], jobs: ["top", "right"], worker: ["left", "top"] } as const;
-
-function relationKind({ to }: Relationship): ConnectionKind {
-  return to === "api" ? "sync" : "async";
-}
-
 type ArchitectureNode = Node<{
-  id: ComponentId;
+  node: OverviewNode;
   responsibility: string;
   compact: boolean;
   schematic: boolean;
@@ -36,7 +29,9 @@ type ArchitectureNode = Node<{
 }, "component">;
 
 type ArchitectureEdge = Edge<{
-  relationship: Relationship;
+  relationship: OverviewRelationship;
+  sourceName: string;
+  targetName: string;
   active: boolean;
   schematic: boolean;
   selected: boolean;
@@ -45,39 +40,38 @@ type ArchitectureEdge = Edge<{
 }, "relationship">;
 
 function ComponentCard({ data }: NodeProps<ArchitectureNode>) {
-  const component = components[data.id];
-  const Icon = icons[data.id];
+  const { node } = data;
   const Supported = data.compact ? Check : Sparkles;
   const statusId = useId();
 
   return (
     <div className={data.schematic ? "schematic-node" : "graph-node"} data-status={data.status}
-      data-change={data.change} data-selected={data.selected || undefined} data-component={data.id}>
+      data-change={data.change} data-selected={data.selected || undefined} data-component={node.id}>
       <Handle className="graph-handle" type="target" id="left" position={Position.Left} />
       <Handle className="graph-handle" type="target" id="top" position={Position.Top} />
       <Handle className="graph-handle" type="target" id="bottom" position={Position.Bottom} />
       <button className={`${data.schematic ? "schematic-node-button" : "node-button"} nodrag nopan`} type="button"
-        onClick={data.open} aria-label={`Inspect ${component.name}`}
-        data-map-control={mapControlId({ kind: "component", id: data.id })}
+        onClick={data.open} aria-label={`Inspect ${node.name}`}
+        data-map-control={mapControlId({ kind: "component", id: node.id })}
         aria-pressed={data.schematic ? data.selected : undefined}
         aria-describedby={data.schematic && (data.status || data.change) ? statusId : undefined}>
         {data.schematic ? (
-          <ArchitectureNodeFace node={{ ...paymentNodeVisuals[data.id], name: component.name }}
+          <ArchitectureNodeFace node={node}
             status={data.status} change={data.change} statusId={statusId} />
         ) : <>
         <span className="node-heading">
-          <span className="node-icon"><Icon size={17} aria-hidden="true" /></span>
-          <span><strong>{component.name}</strong><small>{component.type}</small></span>
+          <span className="node-icon"><NodeIdentityMark identity={node.identity} /></span>
+          <span><strong>{node.name}</strong><small>{node.shortRole ?? node.role}</small></span>
         </span>
         {!data.compact && <span className="node-description">{data.responsibility}</span>}
-        {data.status === "unconfirmed" && <span className="node-status"><CircleHelp size={13} /> Retry behavior unconfirmed</span>}
+        {data.status === "unconfirmed" && <span className="node-status"><CircleHelp size={13} /> Unconfirmed</span>}
         {data.status === "supported" && <span className="node-status"><Supported size={13} /> Source-backed change</span>}
         </>}
       </button>
       <Handle className="graph-handle" type="source" id="right" position={Position.Right} />
       <Handle className="graph-handle" type="source" id="bottom" position={Position.Bottom} />
       <Handle className="graph-handle" type="source" id="top" position={Position.Top} />
-      {data.schematic && visiblePorts[data.id].map((port) => <span key={port} className="schematic-port" data-port={port} aria-hidden="true" />)}
+      {data.schematic && node.ports.map((port) => <span key={port} className="schematic-port" data-port={port} aria-hidden="true" />)}
     </div>
   );
 }
@@ -91,7 +85,7 @@ function RelationshipLink(props: EdgeProps<ArchitectureEdge>) {
   return (
     <>
       {data.schematic
-        ? <ConnectionStroke path={path} kind={relationKind(relationship)} change={data.change} markerEnd={markerEnd}
+        ? <ConnectionStroke path={path} kind={relationship.kind} change={data.change} markerEnd={markerEnd}
             className={data.selected ? "schematic-connection-selected" : undefined} />
         : <BaseEdge id={id} path={path} markerEnd={markerEnd} className={active ? "graph-line graph-line-active" : "graph-line"} />}
       <EdgeLabelRenderer>
@@ -103,9 +97,9 @@ function RelationshipLink(props: EdgeProps<ArchitectureEdge>) {
           data-map-control={mapControlId({ kind: "relationship", relationship })}
           style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}
           onClick={open}
-          aria-label={`Inspect ${components[relationship.from].name} to ${components[relationship.to].name}, ${relationship.label}`}
+          aria-label={`Inspect ${data.sourceName} to ${data.targetName}, ${relationship.label}`}
           aria-pressed={data.schematic ? data.selected : undefined}
-          aria-description={data.schematic ? [connectionNames[relationKind(relationship)], data.change].filter(Boolean).join(", ") : undefined}
+          aria-description={data.schematic ? [connectionNames[relationship.kind], data.change].filter(Boolean).join(", ") : undefined}
           type="button"
         >
           {data.change && data.change !== "unchanged" ? <ChangeMark change={data.change} /> : !data.schematic && active && <span aria-hidden="true">+</span>}
@@ -129,10 +123,12 @@ interface GraphProps {
   compare?: boolean;
   selected?: MapSelection;
   revision: MapRevision;
+  layout: readonly OverviewNode[];
+  label: string;
   onInspect: (selection: MapSelection) => void;
 }
 
-export function ArchitectureGraph({ direction, compact, schematic, visible = true, panelVisible, compare, selected, revision, onInspect }: GraphProps) {
+export function ArchitectureGraph({ direction, compact, schematic, visible = true, panelVisible, compare, selected, revision, layout, label, onInspect }: GraphProps) {
   const container = useRef<HTMLDivElement>(null);
   const [flow, setFlow] = useState<ReactFlowInstance<ArchitectureNode, ArchitectureEdge> | null>(null);
   const [overviewScale, setOverviewScale] = useState(false);
@@ -148,8 +144,8 @@ export function ArchitectureGraph({ direction, compact, schematic, visible = tru
     const stacked = clientWidth < 900;
     const reserve = schematic && !panelVisible ? 0 : wide || compact ? 414 : 343;
     const span = stacked ? clientWidth : clientWidth - reserve;
-    const graphWidth = column + width;
-    const graphHeight = row + (schematic ? 104 : compact ? 92 : 134);
+    const graphWidth = Math.max(0, ...layout.map(node => node.column)) * column + width;
+    const graphHeight = Math.max(0, ...layout.map(node => node.row)) * row + (schematic ? 104 : compact ? 92 : 134);
     const usableTop = schematic ? (stacked ? 105 : 124) : 120;
     const usableBottom = schematic ? (stacked && panelVisible ? clientHeight * 0.51 - 12 : clientHeight - 65) : clientHeight - 35;
     const usableHeight = schematic ? usableBottom - usableTop : stacked ? clientHeight * 0.55 - 35 : clientHeight - 155;
@@ -176,27 +172,27 @@ export function ArchitectureGraph({ direction, compact, schematic, visible = tru
     return () => observer.disconnect();
   }, [flow, direction, compact, schematic, panelVisible, visible]);
 
-  const nodes: ArchitectureNode[] = (["checkout", "api", "jobs", "worker"] as const).map((id, index) => ({
-    id,
+  const nodes: ArchitectureNode[] = layout.filter(node => revision.observations[node.id]).map(node => ({
+    id: node.id,
     type: "component",
-    position: { x: index % 2 === 0 ? 0 : column, y: index < 2 ? 0 : row },
+    position: { x: node.column * column, y: node.row * row },
     style: { width },
     data: {
-      id,
+      node,
       compact,
       schematic: Boolean(schematic),
-      selected: selected?.kind === "component" && selected.id === id,
-      change: schematic ? paymentNodeChange(id, revision, Boolean(compare)) : undefined,
-      responsibility: revision.responsibilities[id],
-      status: revision.retryPath ? id === "checkout" ? "unconfirmed" : id === "worker" ? "supported" : undefined : undefined,
-      open: () => onInspect({ kind: "component", id }),
+      selected: selected?.kind === "component" && selected.id === node.id,
+      change: schematic && compare ? revision.observations[node.id]?.change : undefined,
+      responsibility: revision.observations[node.id]?.description ?? "",
+      status: revision.observations[node.id]?.confidence,
+      open: () => onInspect({ kind: "component", id: node.id }),
     },
   }));
 
   const edges: ArchitectureEdge[] = revision.relationships.map((relationship) => {
     const [sourceHandle, targetHandle] = handles[relationship.route];
-    const change = schematic && compare && relationship.added
-      ? (relationship.id === "payment-jobs" ? "modified" : "added") : undefined;
+    const observation = revision.observations[relationship.id];
+    const change = schematic && compare ? observation?.change : undefined;
     const isSelected = selected?.kind === "relationship" && selected.relationship.id === relationship.id;
     return {
       id: relationship.id,
@@ -205,9 +201,10 @@ export function ArchitectureGraph({ direction, compact, schematic, visible = tru
       target: relationship.to,
       sourceHandle,
       targetHandle,
-      markerEnd: { type: schematic && relationKind(relationship) === "async" ? MarkerType.Arrow : MarkerType.ArrowClosed,
-        width: 14, height: 14, color: change || isSelected || (!schematic && relationship.added) ? "var(--accent)" : "var(--edge)" },
-      data: { relationship, active: Boolean(change || (!schematic && relationship.added)), schematic: Boolean(schematic),
+      markerEnd: { type: schematic && relationship.kind === "async" ? MarkerType.Arrow : MarkerType.ArrowClosed,
+        width: 14, height: 14, color: change || isSelected || (!schematic && observation?.change) ? "var(--accent)" : "var(--edge)" },
+      data: { relationship, sourceName: layout.find(node => node.id === relationship.from)?.name ?? relationship.from,
+        targetName: layout.find(node => node.id === relationship.to)?.name ?? relationship.to, active: Boolean(change || (!schematic && observation?.change)), schematic: Boolean(schematic),
         selected: isSelected, change, open: () => onInspect({ kind: "relationship", relationship }) },
     };
   });
@@ -223,7 +220,7 @@ export function ArchitectureGraph({ direction, compact, schematic, visible = tru
         }}
         nodesFocusable={false} edgesFocusable={false} elementsSelectable={false}
         zoomOnDoubleClick={false} proOptions={{ hideAttribution: true }}
-        aria-label="Payments architecture map"
+        aria-label={label}
       />
       <div className="map-tools" aria-label="Map viewport controls">
         <Button variant="ghost" size="icon-sm" type="button" aria-label="Zoom out" title="Zoom out" onClick={() => { manualViewport.current = true; void flow?.zoomOut(); }}><Minus size={16} /></Button>

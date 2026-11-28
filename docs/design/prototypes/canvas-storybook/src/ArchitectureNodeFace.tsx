@@ -1,5 +1,4 @@
 import { ArchitectureGlyph, ChangeMark, ConfidenceMark, type ArchitectureChange, type Primitive } from "./architecture-visuals";
-import type { ComponentId, MapRevision } from "./fixture";
 
 export const semanticIcons = {
   checkout: { label: "Checkout", src: new URL("./assets/semantic/shopping-cart.svg", import.meta.url).href },
@@ -35,6 +34,7 @@ export type ElementType = "System" | "Container" | "Component";
 export interface NodePresentation {
   identity: NodeIdentity;
   name: string;
+  detailedIdentity?: NodeIdentity;
   role: string;
   element: ElementType;
   responsibility?: string;
@@ -63,9 +63,7 @@ export function ArchitectureNodeFace({ node, variant = "compact", status, change
   statusId?: string;
 }) {
   const detailed = variant === "detailed";
-  const identity: NodeIdentity = detailed && node.identity.family === "semantic" && node.identity.icon === "api"
-    ? { family: "technical", kind: "api" }
-    : node.identity;
+  const identity = (detailed && node.detailedIdentity) || node.identity;
   return (
     <span className="architecture-node-face" data-variant={variant} data-family={identity.family}>
       <span className="architecture-node-heading">
@@ -92,15 +90,4 @@ export function ArchitectureNodeFace({ node, variant = "compact", status, change
       )}
     </span>
   );
-}
-
-export const paymentNodeVisuals = {
-  checkout: { role: "Web application", element: "Container", identity: { family: "semantic", icon: "checkout" } },
-  api: { role: "Payments service", element: "Container", identity: { family: "semantic", icon: "api" } },
-  jobs: { role: "Message queue", element: "Container", identity: { family: "technical", kind: "queue" } },
-  worker: { role: "Background worker", element: "Container", identity: { family: "semantic", icon: "worker" } },
-} as const satisfies Record<ComponentId, Pick<NodePresentation, "role" | "element" | "identity">>;
-
-export function paymentNodeChange(id: ComponentId, revision: MapRevision, comparing: boolean): ArchitectureChange | undefined {
-  if (comparing && revision.retryPath && id !== "api") return "modified";
 }

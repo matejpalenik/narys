@@ -1,6 +1,6 @@
 # Narys visual design
 
-Status: Draft. The Carbon light hybrid canvas is the current candidate for visual review.
+Status: Draft for V1 design baseline review. The Carbon light hybrid canvas remains the selected visual direction.
 
 Scope: V1 canvas, Recent merges, and PR evidence overlay.
 
@@ -41,7 +41,7 @@ The compact node, detailed inspector, and worker deep dive represent degrees of 
 
 | Visual signal | Treatment |
 |---|---|
-| Relationship semantics | Solid for synchronous calls, short dashes for async messages, dash-dot for events, thick long dashes for data dependencies, and dots for unconfirmed semantics. The Payments fixture uses calls and messages. |
+| Relationship semantics | Solid for calls, short dashes for messages, dash-dot for events, thick long dashes for data dependencies, and dots for unconfirmed semantics. Registration alternates short and long dashes. Configuration uses a diamond. Inheritance uses a hollow triangle. Interactive relationships expose their type in the accessibility tree. |
 | Architecture change | Added uses a plus and solid outline. Modified uses a triangle and a leading rule. Removed uses a dashed form and struck label. Unchanged uses the normal outline. PR #128 only shows the supported additions and modifications. |
 | Selection and evidence | Selection uses a single blue border. Keyboard focus uses a separate dashed outline. Source support uses a check and label. Uncertainty uses a question mark and label. Recorded rationale is marked as documented intent. |
 | Motion | Entering the worker detail starts a 6.2-second retry loop with pause and resume. During queue release, blue fills each slot in turn up to its outline. The slots return to white before the message pulse travels to the handler. The Worker and API primitives have their own four-second illustrative cycles and follow the same pause control. The API illustration depicts an invocation with a brief Carbon Blue seam during contact. The specimen change sequence plays once on request. The system reduced-motion preference selects the static presentation. |
@@ -56,17 +56,27 @@ The context diagram identifies its shopper and external-system relationships as 
 
 The product owner approved **View retry flow** as a contextual action within the worker scope. The queue, worker, API, and connection pulses share one cycle. The entry point stays next to the worker and preserves the scope and comparison.
 
-The checking story supplies a controlled fixture update. Open PR #124, choose **Before**, and then use **Finish simulation**. The current comparison retains its selected revision while PR #128 becomes available in Recent merges. The gap story keeps the last supported map visible. These fixtures exercise parts of CONF-005, CONF-006, CONF-007, CONF-013, and CONF-014. Production analysis, contradictory-claim handling, and an independent later merge across an unresolved gap require separate conformance evidence. [Conformance cases](SPEC.md#4-conformance-cases)
+The checking story supplies a controlled fixture update. Open PR #124, choose **Before**, and then use **Finish simulation**. The current comparison retains its selected revision while PR #128 becomes available in Recent merges. The analysis gap story keeps map revision `06b7dd9` visible while PR #128 is unresolved. PR #129 appears in Recent merges with independently supported before and after source at `8e24c0a` and `af129de`. The companion dependent variant withholds the later change. **Complete simulated retry** resolves the gap, makes the recovered map available and creates one entry per supported merge. These fixtures exercise presentation parts of CONF-005, CONF-006, CONF-007, CONF-013, and CONF-014. Automatic recovery and evidence evaluation require production verification. [Conformance cases](SPEC.md#4-conformance-cases)
 
 ### Flask source-level change candidate
 
-The Flask PR #4692 inspector names who builds the JSON response at each revision. Before, `jsonify()` built it directly. After, `jsonify()` delegates responsibility to the app’s configurable `JSONProvider`. The **Configuration point** and **Default implementation** actions lead to the pinned lines for `Flask.json_provider_class` and `DefaultJSONProvider.response()`. The inspector links the recorded performance motivation under **Documented intent** and marks the performance outcome **Unverified**. Deployment and test-source evidence have separate entries. [Flask reference case](docs/research/2026-11-27-flask-merge-reference-case.md) · [Pinned comparison](https://github.com/pallets/flask/compare/c356c6da5f25ba70bd53448ff1d1bf6ad6967fd5...67310ab49613be97a121053dfbbced14657b96eb)
+The Flask PR #4692 inspector names who builds the JSON response at each revision. Before, `jsonify()` built it directly. After, `jsonify()` delegates responsibility to the app’s configurable `JSONProvider`. The **Configuration point** and **Default implementation** actions lead to the pinned lines for `Flask.json_provider_class` and `DefaultJSONProvider.response()`. The inspector links the recorded performance motivation under **Documented intent** and marks the performance outcome **Unverified**. The test-source link is separate from deployment. The divergence variant labels the orjson claim as synthetic and cites the merged provider selection and built-in `json.dumps` call. [Flask reference case](docs/research/2026-11-27-flask-merge-reference-case.md) · [Pinned comparison](https://github.com/pallets/flask/compare/c356c6da5f25ba70bd53448ff1d1bf6ad6967fd5...67310ab49613be97a121053dfbbced14657b96eb)
 
 Classic code cards are the standard for implementation-level elements in this design. The heading gives the symbol kind and name. A separate compartment gives the signatures or expressions relevant to the architectural question. Flask shows the source-backed inheritance with a hollow arrowhead. Payments uses the same cards for the job registration, callback and retry call. [Code symbol card](docs/design/prototypes/canvas-storybook/src/CodeSymbolCard.tsx)
 
 ### Density fixture
 
 The synthetic fixture adds fan-in, fan-out and cross-group dependencies to the existing 22 nodes. Routes use separate orthogonal lanes where possible. At map fit, select a node to read its incoming and outgoing relationships in the inspector. Select a relationship to highlight its path and inspect its source and target. Zoom controls center the inspection and expose labels at close zoom. **Fit View** recovers the whole map. [Density fixture](docs/design/prototypes/canvas-storybook/src/DensityFixture.tsx)
+
+### Presentation contracts for baseline review
+
+| Audit finding | Candidate contract |
+|---|---|
+| Node faces, code cards, revision controls and illustrative playback were already reusable. | Keep the existing primitives. Select node identities and code signatures through data. Use typed relationship kinds for stroke, direction and accessible descriptions. |
+| Payments selected content with PR numbers and worker IDs. Flask built special controls from symbol names. | Use the same inspector shell, change details and observation details. Revisions supply summaries, responsibilities, applicable actions, evidence and unresolved claims. Change records supply documented or missing intent and separate deployment evidence. |
+| The density fixture embedded the graph and its inspector together. | Supply the synthetic inventory and routes separately. Use the shared inspector shell with a docked layout. Keep the relationship traversal and positioning with the fixture. |
+
+The workspace receives a typed model and owns the selected scope, revision, comparison, perspective, selection and focus. Related actions identify a supplied observation or a scope. Unconfirmed observations remain inspectable with their reason. A pending source read can disable the specific action while leaving others available. Omit empty optional sections. The selected revision supplies the evidence excerpts. Compact, detailed and code representations use shared tokens. The Payments illustrative scene and Flask code placement stay with their respective compositions. No schema for arbitrary UI rendering is needed. [Presentation types](docs/design/prototypes/canvas-storybook/src/presentation.ts) · [Workspace model](docs/design/prototypes/canvas-storybook/src/workspace-model.ts) · [Shared inspector](docs/design/prototypes/canvas-storybook/src/Inspector.tsx)
 
 ### Stories
 
@@ -79,6 +89,10 @@ The disposable preview uses Storybook with the React/Vite adapter and React Flow
 | Payments analysis gap | [Open the unresolved-gap story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-analysis-gap&viewMode=story) |
 | Payments architectural exploration | [Open the system context](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-exploration&viewMode=story) |
 | Payments Worker detail | [Open the retry schematic](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-worker-detail&viewMode=story) |
+| Payments later merge awaiting evidence | [Open the dependent gap story](http://127.0.0.1:6006/?path=/story/narys-architecture-canvas--payments-dependent-gap) |
+| Payments reduced motion | [Open the simulated preference test](http://127.0.0.1:6006/?path=/story/narys-architecture-canvas--payments-reduced-motion) |
+| Flask possible divergence | [Review the synthetic claim and pinned counterevidence](http://127.0.0.1:6006/?path=/story/narys-architecture-canvas-flask--possible-divergence) |
+| Inspector variants | [Open the multiple-observation specimen](http://127.0.0.1:6006/?path=/story/narys-canvas-specimen-inspector--multiple-related-observations) |
 | Flask PR #4692 | [Compare JSON response construction](http://127.0.0.1:6006/?path=/story/narys-architecture-canvas-flask--json-provider-change) |
 | Web Application primitive | [Compare static artwork and animated page loading](http://127.0.0.1:6006/iframe.html?id=narys-web-application-primitive--page-loading&viewMode=story) |
 | Worker primitive | [Compare idle, processing, and paused](http://127.0.0.1:6006/iframe.html?id=narys-worker-primitive--motion-states&viewMode=story) |
@@ -125,3 +139,13 @@ The public Flask story was exercised by keyboard through the ngrok preview. The 
 The V1 journey walkthrough followed PR #128 from Recent merges through the Before and After comparison, retry source and recorded rationale. From the worker inspector it took one action to reach the excerpt directly and three through Components. Return restored the worker inspection, comparison revision, keyboard focus and container viewport. Entering from the merge inspector in Components returned to that scope and comparison. In Flask, the configuration and default actions opened their own pinned source lines. The earlier revision showed direct response construction, and the later view labeled the performance outcome unverified.
 
 At desktop map fit with the density inspector open, the gateway’s three incoming and four outgoing relationships were readable in the inspector even where map text was small. At close zoom, selecting the route to Account API brought its label and direction into view. The cross-group Partner events route to Audit worker exposed both endpoints and led to the worker’s three incoming relationships. These checks covered particular paths. Human review still needs to establish how easily unfamiliar developers can follow adjacent paths at shared ports and crossings, find decisive source, and explain the changes accurately.
+
+### Reusable foundation walkthrough
+
+The Carbon light candidate was rendered through the Storybook tunnel at a desktop preview width of 980 pixels and a 414-pixel mobile preset. The mobile long-content specimen had no horizontal overflow in the inspector. The minimal archive examples exercised two, one and zero related actions, unconfirmed source with a navigable action, temporary source unavailability with other actions still enabled, missing rationale, and separate unconfirmed deployment. The archive example uses Go names and paths. Provider-specific actions only appeared where the evidence supplied them.
+
+The Payments keyboard rehearsal covered system context, Containers, Components and implementation. Direct access from the worker and merge, plus guided access through the retry handler, preserved the selected revision and comparison. Returning restored the original scope, inspection, manually adjusted viewport and keyboard focus. PR #124 showed its own responsibilities and source at each revision. Completion of the checking fixture kept its open Before comparison pinned. The gap fixture kept `06b7dd9` visible while comparing #129, withheld the dependent change in the companion fixture, and produced one entry per supported merge after simulated recovery. Recovery preserved the historical comparison until it was closed. These observations apply to the Storybook presentation of SPEC-023 and CONF-014.
+
+The Flask divergence story exposed two pinned lines alongside the synthetic claim. The real intent remained separately attributed and the performance outcome stayed unverified. The before revision omitted the later actions and counterevidence. Both code views used the same relationship notation. Browser checks covered calls, registration, configuration, inheritance and data dependencies. The docked specimen exposed both directions on a cross-group route. Dismissal returned focus to the originating node when the route label could be hidden at map fit.
+
+The Storybook reduced-motion interaction test supplied a simulated media preference. It passed with three readable retry stages, no active animation and no playback button. A normal-preference check stopped and resumed the playback tracks with the keyboard. The native accessibility tree exposed named inspector regions, heading focus, selected controls, and expandable pinned source. A live spoken screen-reader walkthrough and an OS-level reduced-motion check remain open. Prototype walkthroughs support design review. Operational conformance and comparative user comprehension still require verification.

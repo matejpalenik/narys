@@ -1,5 +1,8 @@
 import type { ArchitectureChange } from "./architecture-visuals";
 import type { CodeSymbol } from "./CodeSymbolCard";
+import type { CodeComparison } from "./CodeChangeWorkspace";
+import type { ContextAction, SourceEvidence, SourceExcerpt } from "./presentation";
+import type { ConnectionKind } from "./architecture-visuals";
 
 export const flaskRevisions = {
   before: "c356c6da5f25ba70bd53448ff1d1bf6ad6967fd5",
@@ -66,7 +69,7 @@ const providerBinding: FlaskSource = {
 interface FlaskObservation {
   title: string;
   description: string;
-  source: readonly FlaskSource[];
+  source: readonly [FlaskSource, ...FlaskSource[]];
   change?: ArchitectureChange;
 }
 
@@ -86,7 +89,7 @@ type FlaskReference = {
 
 const jsonifySymbol: CodeSymbol = { name: "jsonify", kind: "Function", members: ["jsonify(*args, **kwargs) → Response"] };
 
-export const flaskReference: Record<FlaskSide, FlaskReference> = {
+const flaskReference: Record<FlaskSide, FlaskReference> = {
   before: {
     summary: "jsonify() serializes the data and constructs the response directly.",
     jsonify: {
@@ -134,3 +137,80 @@ export const flaskReference: Record<FlaskSide, FlaskReference> = {
     },
   },
 };
+
+const symbolSlots = {
+  jsonify: "top-start", owner: "top-end", flask: "bottom-start", default: "bottom-end",
+} as const;
+const relationSlots = {
+  dispatch: { position: "top-link", kind: "sync" },
+  selection: { position: "bottom-link", kind: "configuration" },
+  inheritance: { position: "vertical-link", kind: "inheritance", orientation: "up" },
+} as const satisfies Record<string, { position: string; kind: ConnectionKind; orientation?: "up" }>;
+
+function evidence(side: FlaskSide, [first, ...rest]: readonly [FlaskSource, ...FlaskSource[]]): SourceEvidence {
+  const pin = (source: FlaskSource): SourceExcerpt => ({ ...source, code: source.excerpt, href: flaskSourceUrl(side, source) });
+  return { kind: "available", expanded: true, excerpts: [pin(first), ...rest.map(pin)] };
+}
+
+const providerActions: ContextAction[] = [
+  { id: "configure", label: "Configuration point", kind: "inspect", target: "flask" },
+  { id: "default-provider", label: "Default implementation", kind: "inspect", target: "default" },
+];
+
+export function flaskReview(divergence = false): CodeComparison {
+  function revision(side: FlaskSide): CodeComparison["revisions"][FlaskSide] {
+    const reference = flaskReference[side];
+    const items: CodeComparison["revisions"][FlaskSide]["items"][number][] = [];
+    for (const id of Object.keys(symbolSlots) as (keyof typeof symbolSlots)[]) {
+      const item = reference[id];
+      if (item) items.push({ id, position: symbolSlots[id], kind: "symbol", symbol: item.symbol,
+        observation: { ...item, confidence: "supported", evidence: evidence(side, item.source) } });
+    }
+    for (const id of Object.keys(relationSlots) as (keyof typeof relationSlots)[]) {
+      const item = reference[id];
+      if (item) {
+        const slot = relationSlots[id];
+        items.push({ id, ...slot, kind: "relationship", relation: { id, label: item.title, kind: slot.kind },
+          observation: { ...item, confidence: "supported", evidence: evidence(side, item.source) } });
+      }
+    }
+    const after = side === "after";
+    return {
+      commit: flaskRevisions[side],
+      mapSummary: reference.summary,
+      items,
+      change: {
+        responsibility: { title: "Who builds the JSON response", before: "jsonify()", after: "The app’s JSON provider" },
+        summary: after
+          ? "Applications can replace the provider. The default still uses Python’s built-in json library."
+          : "jsonify() serializes its arguments and supplies the body and MIME type to the application’s response class.",
+        related: after ? providerActions : undefined,
+        claims: divergence && after ? [{
+          kind: "divergence",
+          attribution: "Synthetic claim for this fixture",
+          reported: "PR #4692 made orjson the default serializer.",
+          text: "The merged source selects DefaultJSONProvider, which calls Python’s built-in json.dumps.",
+          evidence: evidence(side, [providerSelection, defaultSerialization]),
+        }] : undefined,
+        evidence: evidence(side, reference.dispatch.source),
+        references: [
+          { href: flaskComparison, label: "Compare the pinned commits" },
+          ...(after ? [{ href: flaskSourceUrl(side, { path: "tests/test_json.py", range: "L223-L257" }), label: "Custom-provider test source" }] : []),
+        ],
+      },
+    };
+  }
+  return {
+    repository: "pallets/flask", branch: "main", subject: "Implementation · Flask JSON responses", title: "JSON response construction",
+    merge: {
+      id: 4692, title: "Add JSON provider interface",
+      intent: {
+        kind: "documented", reference: "Read the PR rationale", href: flaskPullRequest,
+        text: "Let applications choose their JSON implementation. The author cited potential speed gains for JSON-heavy APIs as a motivation.",
+        outcome: { label: "Performance outcome", text: "Unverified" },
+      },
+      deployment: { kind: "unconfirmed" },
+    },
+    revisions: { before: revision("before"), after: revision("after") },
+  };
+}

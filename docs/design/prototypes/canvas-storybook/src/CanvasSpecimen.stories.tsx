@@ -7,6 +7,7 @@ import {
   ArchitectureNodeFace, SemanticIcon, TechnologyMark, semanticIcons, technologyIcons, type NodePresentation, type Technology,
 } from "./ArchitectureNodeFace";
 import { DensityFixture } from "./DensityFixture";
+import { densityModel } from "./density-fixture-data";
 import { IllustrationPlayback } from "./IllustrativeFlow";
 
 const primitives = Object.keys(primitiveNames) as Primitive[];
@@ -31,7 +32,7 @@ function DensitySection({ standalone = false }: { standalone?: boolean }) {
       <Heading id="specimen-density">Synthetic density fixture · 22 nodes</Heading>
       <p>Design-system sample. The nodes and relationships do not represent Payments or any real project.</p>
       <p>Select a node to inspect its incoming and outgoing relationships. Zoom in for canvas labels.</p>
-      <DensityFixture />
+      <DensityFixture model={densityModel} />
     </section>
   );
 }

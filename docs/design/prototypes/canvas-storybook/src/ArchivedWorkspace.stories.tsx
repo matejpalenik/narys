@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Workspace } from "./Workspace";
+import { PaymentsWorkspace } from "./PaymentsWorkspace";
 
 const meta = {
   title: "Narys/Archive (deprecated)/Architecture canvas",
-  component: Workspace,
+  component: PaymentsWorkspace,
   tags: ["deprecated"],
   args: { scenario: "ready", startWithChange: true },
-} satisfies Meta<typeof Workspace>;
+} satisfies Meta<typeof PaymentsWorkspace>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

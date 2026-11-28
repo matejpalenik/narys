@@ -292,7 +292,7 @@ The authoritative release requirements are defined in [SPEC.md](SPEC.md) and its
 
 Narys is designed as a self-hosted application with a small operational footprint.
 
-The proposed architecture uses a single TypeScript codebase with separate web and analysis processes, durable local persistence, and a configurable model gateway.
+The V1 design uses a single TypeScript codebase with separate web and analysis processes and durable local persistence. The analysis worker calls an operator-configured model provider directly through TanStack AI.
 
 ```mermaid
 flowchart LR
@@ -300,34 +300,33 @@ flowchart LR
 
     subgraph Narys["Narys installation"]
         Web["Web application<br/>Next.js + React"]
-        Worker["Analysis worker<br/>Node.js"]
+        Worker["Analysis worker<br/>Node.js + TanStack AI"]
         Store[("Architecture and evidence<br/>SQLite")]
-        Gateway["Model gateway<br/>LiteLLM"]
 
         Web --> Store
         Worker --> Store
-        Worker --> Gateway
     end
 
     GitHub["GitHub"]
-    Model["Hosted model or local Ollama"]
+    Model["OpenAI, Anthropic, or team-run Ollama"]
 
     Engineer --> Web
     GitHub -->|Merge and branch events| Web
     Worker -->|Repository evidence| GitHub
-    Gateway --> Model
+    Worker -->|Bounded analysis request| Model
 ```
 
 | Layer | Planned technology |
 | --- | --- |
 | Application | TypeScript, Next.js |
-| Frontend | React, React Flow, shadcn/ui |
+| Frontend | React, React Flow, shadcn/ui, TanStack Query for server data, nuqs for URL state |
 | Design system | Storybook, Carbon-inspired visual language |
 | Background analysis | Node.js |
-| Persistence | SQLite |
-| Model gateway | LiteLLM |
-| Local inference | Ollama |
-| Authentication | Better Auth |
+| Persistence | SQLite, Drizzle ORM, `better-sqlite3`, Drizzle Kit migrations |
+| Inference | TanStack AI with direct OpenAI, Anthropic, or local-only Ollama adapters |
+| Authentication | Better Auth on Next.js with its Drizzle adapter |
+| Validation | Zod at application boundaries |
+| Tests | Vitest and Playwright Test |
 | Deployment | Docker Compose |
 
 The architecture is deliberately constrained for V1. Additional infrastructure should be introduced only when justified by demonstrated requirements.
@@ -349,7 +348,7 @@ The planned V1 data boundary includes:
 
 Repository evidence is sent to the configured analysis destination. Teams choosing a hosted model provider should consider the provider's data-handling terms.
 
-See [ADR-0002](docs/adr/adr-0002-repository-data-boundary.md), [ADR-0012](docs/adr/adr-0012-github-repository-access.md), and [ADR-0017](docs/adr/adr-0017-workspace-publication.md) for the corresponding design decisions.
+See [ADR-0021](docs/adr/adr-0021-direct-model-inference.md), [ADR-0012](docs/adr/adr-0012-github-repository-access.md), and [ADR-0017](docs/adr/adr-0017-workspace-publication.md) for the corresponding design decisions.
 
 ## Getting started
 

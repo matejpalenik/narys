@@ -1,18 +1,18 @@
 ---
 title: "ADR-0002: Repository data boundary for architecture analysis"
-status: "Accepted"
+status: "Superseded"
 date: "2026-11-27"
 authors: "Product owner and architecture design assistant"
 tags: ["architecture", "decision"]
 supersedes: ""
-superseded_by: ""
+superseded_by: "ADR-0021"
 ---
 
 # ADR-0002: Repository data boundary for architecture analysis
 
 ## Status
 
-**Accepted** on November 27, 2026. The product owner chose a model gateway that supports team-selected hosted providers and models served by the team's Ollama instance.
+**Superseded** by [ADR-0021](adr-0021-direct-model-inference.md) on November 28, 2026. The new decision uses direct provider calls and carries forward the operator-configured destination and local failure boundary.
 
 ## Context
 

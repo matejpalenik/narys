@@ -23,7 +23,7 @@ Narys helps engineers keep up with architectural changes in one selected area of
 
 Use the adopted general, frontend, and TypeScript engineering standards recorded in AGENTS.md. Use one domain boundary for the living architecture. Keep it independent of the UI and GitHub, SQLite, and model adapters. Separate setup and ingestion commands from workspace reads. Both use the same store. [Standards adoption](AGENTS.md#engineering-standards)
 
-Propose one Node.js runtime version and an npm lockfile. Use the same build and check commands locally and in GitHub Actions. Start with TypeScript checking, lint, and the application build. Add behavior and dependency checks where the first working slice supplies real boundaries and assertions. Use Storybook for the approved React component verification. Select exact versions and commands during repository setup. [Canvas foundation](docs/adr/adr-0015-v1-canvas-foundation.md) · [Locked npm installs](https://docs.npmjs.com/cli/v11/commands/npm-ci/) · [Node.js checks in GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/nodejs)
+Propose one Node.js runtime version and an npm lockfile. Use the same build and check commands locally and in GitHub Actions. Use Vitest for unit and integration tests, including real SQLite transactions. Use Playwright Test for the integrated browser journey and Storybook for component verification. Apply the adopted TypeScript, lint, build, and dependency checks. Select exact versions and commands during repository setup. [Canvas foundation](docs/adr/adr-0015-v1-canvas-foundation.md) · [Locked npm installs](https://docs.npmjs.com/cli/v11/commands/npm-ci/) · [Node.js checks in GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/nodejs)
 
 ## 3. System context (C4 L1)
 
@@ -43,7 +43,7 @@ flowchart LR
     visitor -->|"Reads published demo data · HTTPS"| narys
     narys -->|"Reads permitted repository records · GitHub API over HTTPS"| github
     github -->|"Signals pull request merges and branch updates · HTTPS webhook"| narys
-    narys -->|"Requests analysis through the team’s gateway · model API"| model
+    narys -->|"Calls the configured model endpoint · provider API"| model
 ```
 
 The same person may hold both roles. GitHub is the source of record for repository revisions and delivery evidence. Narys owns the map it derives from those revisions. Teams continue to author, merge, and deliver changes through their existing workflows. [ADR-0018](docs/adr/adr-0018-automated-map-publication.md)
@@ -60,18 +60,16 @@ flowchart LR
     hosted["Hosted model provider<br/>External service · operator configured"]
     subgraph team["Pilot team environment"]
         ollama["Ollama<br/>Team-run inference service · operator configured"]
-        subgraph pilot["Narys Docker Compose stack · gateway included"]
+        subgraph pilot["Narys Docker Compose stack"]
             service["Narys web process<br/>Server application · workspace requests and webhook intake · Next.js"]
-            worker["Analysis worker<br/>Background process · Node.js · same application image"]
+            worker["Analysis worker<br/>Background process · Node.js and TanStack AI · same application image"]
             store[("Narys store<br/>Data store · map, evidence and analysis progress · SQLite on a local volume")]
-            gateway["Model gateway<br/>LiteLLM service · routes requests to the team-configured model"]
             service -->|"Reads and writes · SQLite via persistence adapter"| store
             worker -->|"Reads work and writes observations · SQLite via persistence adapter"| store
-            worker -->|"Requests analysis · model API over HTTP within Compose"| gateway
         end
-        gateway -->|"Runs local inference when selected · Ollama API over private HTTP(S)"| ollama
+        worker -->|"Runs local inference when selected · Ollama API over private HTTP(S)"| ollama
     end
-    gateway -->|"Requests hosted inference when enabled · provider API over HTTPS"| hosted
+    worker -->|"Requests hosted inference when enabled · OpenAI or Anthropic API over HTTPS"| hosted
     browser -->|"Reads workspace and submits setup choices · HTTPS"| service
     worker -->|"Reads revision evidence and recovers missed merges · GitHub API over HTTPS"| github
     github -->|"Delivers pull request and branch-update events · same HTTPS endpoint"| service
@@ -79,11 +77,10 @@ flowchart LR
 
 | Container | Responsibility | Owns or uses |
 |---|---|---|
-| Project workspace | Present the map, recent merges, and evidence. Keep the selected revision and overlay state during inspection. | React Flow renders the Narys graph. shadcn/ui provides workspace controls, with Storybook for component verification. The workspace owns browser interaction state and reads architecture and evidence from Narys. [ADR-0015](docs/adr/adr-0015-v1-canvas-foundation.md) |
+| Project workspace | Present the map, recent merges, and evidence. Keep the selected revision and overlay state during inspection. | React Flow renders the graph. Use shadcn/ui with Storybook for controls, TanStack Query for protected reads and progress polling, and nuqs for restorable URL state. The workspace owns transient interaction state. [ADR-0015](docs/adr/adr-0015-v1-canvas-foundation.md) |
 | Narys web process | Serve the workspace, apply authorized configuration, and record webhook work. | Next.js process. Uses the application rules and server-side access checks. [ADR-0010](docs/adr/adr-0010-v1-application-runtime.md) |
-| Analysis worker | Build the starting map and apply supported updates from durable work and source evidence. | Separate Node.js process using the same TypeScript codebase and release image as the web process. [ADR-0010](docs/adr/adr-0010-v1-application-runtime.md) · [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) |
+| Analysis worker | Build the starting map and apply supported updates from durable work and source evidence. | Separate Node.js process using the same TypeScript codebase and release image as the web process. TanStack AI calls the configured provider. [ADR-0010](docs/adr/adr-0010-v1-application-runtime.md) · [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) · [ADR-0021](docs/adr/adr-0021-direct-model-inference.md) |
 | Narys store | Preserve enough project and processing state for revision comparisons, restarts, and recovery. | Canonical home for the automatically built map, with revision and evidence references. SQLite database on a local volume shared by the web and worker processes. [ADR-0011](docs/adr/adr-0011-v1-persistence.md) · [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) |
-| Model gateway | Forward analysis requests to the operator's chosen model route. | File-configured LiteLLM ships in the Compose stack and uses the team's provider credentials and connection settings. Verify hosted and local routing before bundling a release. [ADR-0003](docs/adr/adr-0003-model-gateway-deployment.md) · [ADR-0016](docs/adr/adr-0016-pilot-gateway-product.md) |
 
 ## 5. Domain and data architecture
 
@@ -93,7 +90,7 @@ Start assembling the map at a known revision from a file or folder selected by t
 
 The team's Narys installation publishes the first map and subsequent observations through the worker independently of user sessions. The map and recent changes include architecture-changing merges in the selected area from people and agents. Known agent-led changes remain the focus of pilot evaluation. [ADR-0006](docs/adr/adr-0006-merge-coverage.md) · [ADR-0018](docs/adr/adr-0018-automated-map-publication.md)
 
-Narys uses a gateway to analyze selected evidence with a team-run Ollama model or an explicitly configured hosted provider. Narys treats model output as candidate observations and owns the checks against revision-pinned records before it updates the map. The operator chooses the model route. A local route keeps inference within the team's environment, including when a request fails. [ADR-0002](docs/adr/adr-0002-repository-data-boundary.md)
+The operator selects OpenAI, Anthropic, or a team-run local-only Ollama endpoint. TanStack AI runs in the worker and sends selected evidence directly to that provider. Narys validates external inputs and candidate outputs with Zod and checks candidate observations against revision-pinned source before updating the map. A local route keeps inference within the team's environment, including when a request fails. [ADR-0021](docs/adr/adr-0021-direct-model-inference.md)
 
 Check concrete claims in PR descriptions, commit messages, and related records against the source before and after integration. Apply the supported source changes to the map. Surface conflicting evidence as a possible divergence and incomplete evidence as unconfirmed. Keep goals such as improved performance as attributed rationale. [ADR-0008](docs/adr/adr-0008-map-update-evidence.md)
 
@@ -113,15 +110,15 @@ For the first slice, use the model to propose observations and a small set of AS
 | Workspace reads and setup | Narys application | Project workspace | Better Auth handles GitHub sign-in and sessions. Narys owns server-side role checks for workspace reads and setup. [ADR-0013](docs/adr/adr-0013-workspace-access.md) · [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) |
 | Published workspace reads | Narys application | Anonymous visitors | Read-only responses for a deliberately published eligible workspace. Apply eligibility and field selection on the server before serving map or evidence data. [ADR-0017](docs/adr/adr-0017-workspace-publication.md) |
 | Revision-bound evidence reads | Living architecture queries in the web process | Canvas and inspector | Resolve the workspace, selected map revision or comparison, and observation together. Apply workspace access and evidence eligibility before returning the referenced evidence. [ADR-0019](docs/adr/adr-0019-revision-bound-evidence.md) |
-| Architecture analysis | LiteLLM for transport, Narys for analysis requests and observations | Narys worker | Use one interface for text input and candidate observations. Check response shape and evidence references in Narys. Use the same representative fixtures to assess hosted models and Ollama. [ADR-0016](docs/adr/adr-0016-pilot-gateway-product.md) |
+| Architecture analysis | Configured provider through TanStack AI | Narys worker | Use `CandidateModel` for bounded analysis input and candidate observations. Validate response shape and source references in Narys. Use the same representative fixtures to assess hosted models and Ollama. [ADR-0021](docs/adr/adr-0021-direct-model-inference.md) |
 
 ## 6. Runtime, deployment, and recovery
 
-The pilot team operates Narys and its bundled gateway with Docker Compose in its own environment. The team connects a hosted account or an Ollama endpoint. The initial design assumes one continuously running host with durable project state. The team configures access, monitors the instance, and handles updates, backup, and recovery. Verify that a container replacement or restore preserves published map revisions and merge progress. [ADR-0001](docs/adr/adr-0001-pilot-operating-model.md) · [ADR-0003](docs/adr/adr-0003-model-gateway-deployment.md) · [Docker Compose deployment](https://docs.docker.com/compose/how-tos/production/)
+The pilot team operates the Narys web and worker services with Docker Compose in its own environment. The operator sets the model destination and credentials in the worker's configuration. The initial design assumes one continuously running host with durable project state. The team configures access, monitors the instance, and handles updates, backup, and recovery. Verify that a container replacement or restore preserves published map revisions and merge progress. [ADR-0001](docs/adr/adr-0001-pilot-operating-model.md) · [ADR-0021](docs/adr/adr-0021-direct-model-inference.md) · [Docker Compose deployment](https://docs.docker.com/compose/how-tos/production/)
 
 A GitHub pull request webhook starts processing for merges into the tracked branch. The application validates the signed delivery and stores the work before acknowledging it. Background analysis reads GitHub evidence for the integrated revision and publishes supported observations with evidence gaps. API reconciliation recovers missed merges after interruptions using the same work records. The pilot team supplies HTTPS ingress for the webhook endpoint. Use the team-owned GitHub App for delivery and short-lived installation tokens for API reads. The first dogfood installation connects the Narys repository. Ingress configuration and recovery cadence remain open. [ADR-0005](docs/adr/adr-0005-merge-detection.md) · [ADR-0012](docs/adr/adr-0012-github-repository-access.md)
 
-Use Better Auth for GitHub sign-in and SQLite-backed browser sessions. The application verifies repository eligibility at sign-in and enforces operator-assigned viewer or maintainer access on protected requests. Browser sessions and user authorization stay separate from installation credentials and signed webhook delivery. [ADR-0013](docs/adr/adr-0013-workspace-access.md)
+Use Better Auth with Next.js for GitHub sign-in and its Drizzle adapter for SQLite-backed browser sessions. The application verifies repository eligibility at sign-in and enforces operator-assigned viewer or maintainer access on protected requests. Browser sessions and user authorization stay separate from installation credentials and signed webhook delivery. [ADR-0013](docs/adr/adr-0013-workspace-access.md)
 
 Workspace publication is a standard V1 setting. Every workspace starts private. The operator can enable public reads when the connected repository is public. The same page and workspace data authorization rules apply for the Narys demo and other eligible workspaces. Admit only public evidence to guest responses. The conformance cases cover the default, explicit publication, and withdrawal. [ADR-0017](docs/adr/adr-0017-workspace-publication.md) · [V1 specification](SPEC.md#4-conformance-cases)
 
@@ -131,7 +128,7 @@ For a per-merge explanation, identify the target branch revisions immediately be
 
 Use one TypeScript application with a Next.js web process and a Node.js worker process from the same release image. The worker reads durable pending work and keeps analysis outside the webhook request. Keep domain operations shared by the two entry points and transport and storage behind adapters. Run specialized Python tooling in a separate container if a demonstrated need arises. [ADR-0010](docs/adr/adr-0010-v1-application-runtime.md)
 
-Use one SQLite database on a local Compose volume shared by the web and worker. Record webhook work durably before acknowledgement. Commit published map changes and their corresponding work state together. Use a consistent backup and recover later merges through GitHub reconciliation after restore. [ADR-0011](docs/adr/adr-0011-v1-persistence.md)
+Use one SQLite database on a local Compose volume shared by the web and worker. Use Drizzle ORM with `better-sqlite3` in persistence adapters. Drizzle Kit generates reviewed SQL under `src/feature/architecture/infrastructure/migrations/sqlite/`. The operator applies migrations before the web and worker start. Record webhook work durably before acknowledgement. Commit published map changes and their corresponding work state together. Use a consistent backup and recover later merges through GitHub reconciliation after restore. [ADR-0011](docs/adr/adr-0011-v1-persistence.md)
 
 ## 7. Verification and open design work
 
@@ -150,7 +147,7 @@ Use one SQLite database on a local Compose volume shared by the web and worker. 
 | Workspace setup respects role assignments | GitHub documents user authorization and repository access checks for a GitHub App installation. [GitHub App user authorization](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app) · [ADR-0013](docs/adr/adr-0013-workspace-access.md) | Rehearse sign-in with eligible and ineligible users. Verify viewer and maintainer permissions, setup authorization, and access removal. |
 | Public visitors can explore the published map | GitHub confirmed public repository visibility on November 27, 2026. REQ-005 defines the guest walkthrough. [ADR-0014](docs/adr/adr-0014-public-narys-demo.md) | Check public pages, direct requests, and cached responses against public and private evidence fixtures. Verify publication withdrawal and continued authorized workspace access. |
 | The canvas supports merge comparison and evidence inspection | The disposable prototype establishes the interaction. React Flow documents viewport controls, accessible graph interactions, and custom nodes. [ADR-0015](docs/adr/adr-0015-v1-canvas-foundation.md) | Exercise stable map positioning, keyboard navigation, overlay focus return, and labeled uncertainty on a rendered retry example. |
-| The selected model route preserves its data boundary | LiteLLM documents file-configured deployment, hosted providers, and Ollama. Ollama documents local-only inference. Container and provider route checks are pending. [Gateway decision](docs/adr/adr-0016-pilot-gateway-product.md) · [Ollama local mode](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features) | Confirm destination and payload with hosted test routes and a team-run Ollama route. Induce a local failure and observe that it cannot send content to a hosted provider. Assess output quality separately. |
+| The selected model route preserves its data boundary | TanStack AI documents direct adapters. Ollama documents local-only inference. Route checks are pending. [Inference decision](docs/adr/adr-0021-direct-model-inference.md) · [Ollama local mode](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features) | Check the destination, payload and structured output for OpenAI, Anthropic and a team-run Ollama route. Take Ollama offline with hosted credentials present and observe zero hosted calls for that job. Assess output quality separately. |
 | The workspace can build a useful starting map and explain changes | The prototype exercises merge inspection with synthetic evidence. The Flask reference supplies expected source relationships for automated setup. [Prototype observations](EXPERIENCE.md#8-prototypes-and-decisions) · [Flask reference](docs/research/2026-11-27-flask-merge-reference-case.md) | Exercise automated setup and merge updates against real repository evidence. Check the canvas with keyboard and assistive technology, including loading and recovery states. Compare engineer understanding with the team's normal GitHub handoff. |
 
 ### First operational slice
@@ -166,8 +163,8 @@ The first-slice approval includes this scope, the applicable V1 specification, t
 | ADR | Decision | Status | Affected area |
 |---|---|---|---|
 | [ADR-0001](docs/adr/adr-0001-pilot-operating-model.md) | The pilot team self-hosts with Docker Compose. | Accepted | Deployment and operational ownership |
-| [ADR-0002](docs/adr/adr-0002-repository-data-boundary.md) | Use a model gateway for team-selected hosted models or Ollama. | Accepted | Model routing and source data boundary |
-| [ADR-0003](docs/adr/adr-0003-model-gateway-deployment.md) | Ship the gateway with Narys and let teams connect their own models. | Accepted | Gateway packaging and onboarding |
+| [ADR-0002](docs/adr/adr-0002-repository-data-boundary.md) | Original model routing and repository data boundary decision. | Superseded by ADR-0021 | Model routing and source data boundary |
+| [ADR-0003](docs/adr/adr-0003-model-gateway-deployment.md) | Original decision to bundle the gateway. | Superseded by ADR-0021 | Gateway packaging and onboarding |
 | [ADR-0004](docs/adr/adr-0004-confirmed-map-ownership.md) | Keep the maintainer-confirmed map in the team's Narys installation. | Superseded | Replaced by ADR-0018 |
 | [ADR-0005](docs/adr/adr-0005-merge-detection.md) | Trigger on a GitHub webhook and recover missed merges through API reconciliation. | Accepted | Update trigger, freshness, and recovery |
 | [ADR-0006](docs/adr/adr-0006-merge-coverage.md) | Track architecture-changing merges from people and agents in the selected area. | Accepted | Merge coverage and scope |
@@ -180,10 +177,11 @@ The first-slice approval includes this scope, the applicable V1 specification, t
 | [ADR-0013](docs/adr/adr-0013-workspace-access.md) | Use Better Auth for GitHub sign-in and separately grant viewer or maintainer access. | Accepted | Workspace sign-in and permissions |
 | [ADR-0014](docs/adr/adr-0014-public-narys-demo.md) | Launch with a live, read-only walkthrough of Narys. | Accepted | Public scope and release timing |
 | [ADR-0015](docs/adr/adr-0015-v1-canvas-foundation.md) | Use React Flow for the V1 canvas, with shadcn/ui and Storybook for the React component foundation. | Accepted | Workspace rendering and interaction verification |
-| [ADR-0016](docs/adr/adr-0016-pilot-gateway-product.md) | Use file-configured LiteLLM as the bundled V1 gateway, subject to route verification. | Accepted | Model routing, gateway operation, and evidence boundary |
+| [ADR-0016](docs/adr/adr-0016-pilot-gateway-product.md) | Original LiteLLM gateway selection. | Superseded by ADR-0021 | Model routing and gateway operation |
 | [ADR-0017](docs/adr/adr-0017-workspace-publication.md) | Start workspaces private and allow opt-in public access for workspaces backed by public GitHub repositories. | Accepted | Workspace visibility, public authorization, and disclosure |
 | [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) | Generate the first map and publish later source-backed changes automatically. | Accepted | Map setup, publication, and revision-scoped evidence |
 | [ADR-0019](docs/adr/adr-0019-revision-bound-evidence.md) | Publish claims with decisive revision-pinned source excerpts and read them in the selected context. | Accepted | Evidence retention and publication boundary |
 | [ADR-0020](docs/adr/adr-0020-first-slice-source-checks.md) | Establish source support through a small set of AST checks for explicit code relationships. | Accepted | Source-check boundary for the first slice |
+| [ADR-0021](docs/adr/adr-0021-direct-model-inference.md) | Use TanStack AI for direct OpenAI, Anthropic, and local-only Ollama calls from the worker. | Accepted | Model routing, worker configuration, and evidence boundary |
 
 The approved V1 specification defines observable behavior and conformance cases. Use the approved first-slice baseline for epic and program design. Select exact setup versions and pilot ingress settings before configuring deployment. [V1 specification](SPEC.md) · [First-slice approval](docs/approvals/v1-first-slice-baseline.md)

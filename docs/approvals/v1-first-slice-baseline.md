@@ -23,4 +23,27 @@ On November 28, 2026, the product owner approved the updated standards proposed 
 
 > Yes, I approve the updated general and TypeScript standards for the first slice.
 
-For the new TypeScript web and worker code in the first operational slice, this decision supersedes the original standards row above. The approved [general profile](../../.agents/skills/engineering-standards/SKILL.md) and [TypeScript profile](../../.agents/skills/typescript-standards/SKILL.md), including their reference files and the general profile's frontend rules, have a combined manifest SHA-256 of `2e02e07dae2a17600eb8fa6c934b905d23a16e95429a6ae876b09f2a0e6f0e29`. Reproduce the digest with the command in the [reviewed program design](../epics/v1-first-slice-program-design.md). Applicable shared Software Factory and setup references match `585021a08441aa095cfb8352e48557591b516303`. The [adoption entry](../../AGENTS.md#engineering-standards) records scope and exceptions.
+For the new TypeScript web and worker code in the first operational slice, this decision supersedes the original standards row above. The approved [general profile](../../.agents/skills/engineering-standards/SKILL.md) and [TypeScript profile](../../.agents/skills/typescript-standards/SKILL.md), including their reference files and the general profile's frontend rules, have a combined manifest SHA-256 of `2e02e07dae2a17600eb8fa6c934b905d23a16e95429a6ae876b09f2a0e6f0e29`. Reproduce the digest with the command in the [reviewed program design](https://github.com/matejpalenik/narys/blob/a37bb13fba46ff91d30d416bcf7713cfc22535b3/docs/epics/v1-first-slice-program-design.md). Applicable shared Software Factory and setup references match `585021a08441aa095cfb8352e48557591b516303`. The [adoption entry](../../AGENTS.md#engineering-standards) records scope and exceptions.
+
+## Scoped stack update
+
+The product owner selected Vitest, Playwright Test, TanStack Query and AI, Better Auth with Next.js, Drizzle ORM for SQLite, Zod, and nuqs on November 28, 2026. The owner also selected `better-sqlite3` and instructed that Drizzle Kit generate the checked-in SQL in the Architecture feature's `infrastructure/migrations/sqlite/` directory.
+
+> Yes please, let's remove LiteLLM and route inference through TanStack AI - please update all relevant documentation in the repo.
+
+[ADR-0021](../adr/adr-0021-direct-model-inference.md) records direct OpenAI, Anthropic, and local-only Ollama routes. SPEC-016 and CONF-011 keep their existing behavioral scope. The engineering standard manifest and pinned visual baseline above still apply.
+
+The [revised epic](../epics/v1-first-operational-slice.md) and [program design](../epics/v1-first-slice-program-design.md) apply the new stack to the approved delivery outcome. Review the exact revised documents and GitHub ticket bodies before releasing work. The owner will bootstrap repository tooling before implementation.
+
+### Revised artifacts for review
+
+The following content identities describe the revisions for review. GitHub reports #2 and #3 as children of #1, with #3 blocked by #2.
+
+| Artifact | SHA-256 |
+|---|---|
+| [Architecture](../../ARCHITECTURE.md) | `f1cbe327933e648c9c04c15afb1f033f211cce4454f23e7d10470753f0257c58` |
+| [Epic](../epics/v1-first-operational-slice.md) | `83cc10299dc7bfb1fa965af21f0e15f4ba3e28321335bb20589fe021f08d1ee2` |
+| [Program design](../epics/v1-first-slice-program-design.md) | `85f1b4b01a052a279b6a475f96214142b12d18d3eb45f7ffee9fbf197dfd567a` |
+| [GitHub issue #1](https://github.com/matejpalenik/narys/issues/1) body | `7bc87de4b6ba3ade878e7e6fc37d7d83e491ed0af25512512b4d0abb4973d60a` |
+| [GitHub issue #2](https://github.com/matejpalenik/narys/issues/2) body | `654cb3f0fc44b72f1e334ffff38ae5e2bb920d2972e42f255cf973a34da4b0a4` |
+| [GitHub issue #3](https://github.com/matejpalenik/narys/issues/3) body | `0b540b1d8fdca3938aff5f32c38479f1c7f34ddb2b4be367ed2a866da27d3356` |

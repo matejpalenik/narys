@@ -14,6 +14,8 @@ superseded_by: ""
 
 **Accepted** on November 27, 2026. The product owner chose Next.js, React, and an analysis worker in one TypeScript codebase for V1. Specialized Python tooling can run in a separate container if needed.
 
+[ADR-0021](adr-0021-direct-model-inference.md) supersedes the bundled gateway detail in this decision. The analysis worker calls the configured model endpoint directly.
+
 ## Context
 
 The pilot runs on one host with Docker Compose. It needs an interactive canvas, a webhook that can acknowledge durable work promptly, and background analysis that can recover after restart. Compare installation and release effort, isolation of slow analysis from incoming requests, and support for inspecting repository source in several languages. [Pilot operating model](adr-0001-pilot-operating-model.md) · [Merge detection](adr-0005-merge-detection.md) · [V1 experience](../../EXPERIENCE.md)

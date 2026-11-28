@@ -1,18 +1,18 @@
 ---
 title: "ADR-0016: Bundled gateway product for V1"
-status: "Accepted"
+status: "Superseded"
 date: "2026-11-27"
 authors: "Narys product owner and architecture design"
 tags: ["architecture", "decision"]
 supersedes: ""
-superseded_by: ""
+superseded_by: "ADR-0021"
 ---
 
 # ADR-0016: Bundled gateway product for V1
 
 ## Status
 
-**Accepted.** On November 27, 2026, the product owner selected LiteLLM for V1 subject to the model route checks below.
+**Superseded** by [ADR-0021](adr-0021-direct-model-inference.md) on November 28, 2026. V1 uses direct calls through TanStack AI.
 
 ## Context
 

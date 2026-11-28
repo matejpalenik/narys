@@ -1,20 +1,18 @@
 ---
 title: "ADR-0003: Model gateway deployment for the pilot"
-status: "Accepted"
+status: "Superseded"
 date: "2026-11-27"
 authors: "Product owner and architecture design assistant"
 tags: ["architecture", "decision"]
 supersedes: ""
-superseded_by: ""
+superseded_by: "ADR-0021"
 ---
 
 # ADR-0003: Model gateway deployment for the pilot
 
 ## Status
 
-**Accepted** on November 27, 2026. The product owner chose to ship the gateway with the application and let teams connect their own models.
-
-The later gateway product decision selects LiteLLM subject to the route checks. This record continues to govern packaging and operator responsibilities. [ADR-0016](adr-0016-pilot-gateway-product.md)
+**Superseded** by [ADR-0021](adr-0021-direct-model-inference.md) on November 28, 2026. The worker connects to the operator's selected model endpoint.
 
 ## Context
 

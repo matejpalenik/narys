@@ -68,7 +68,7 @@ Use `first-principles` and `show-me` when available and useful. Do not load all 
 
 ### Application development skills
 
-Select the skills that match the task. Apply their guidance within the approved engineering baseline and UI foundation.
+Load a technology-specific skill only when its trigger matches the code, tests, or configuration you are implementing, reviewing, debugging, or setting up. Evaluate each skill independently, even within the same library. Use the selected guidance within the approved engineering baseline and UI foundation.
 
 | Activity | Skill |
 |---|---|
@@ -79,7 +79,24 @@ Select the skills that match the task. Apply their guidance within the approved 
 | Design reusable React component APIs or refactor component composition and shared state | [`vercel-composition-patterns`](.agents/skills/vercel-composition-patterns/SKILL.md) |
 | Verify changed Next.js behavior with a running development server and compatible browser tooling | [`next-dev-loop`](.agents/skills/next-dev-loop/SKILL.md) |
 | Audit UI accessibility, usability, or conformance with Vercel’s Web Interface Guidelines | [`web-design-guidelines`](.agents/skills/web-design-guidelines/SKILL.md) |
+| Automate or debug a real browser flow from the terminal with the Playwright CLI | [`playwright`](.agents/skills/playwright/SKILL.md) |
+| Write or run Vitest unit and integration tests, fixtures, mocks, or coverage | [`vitest`](.agents/skills/vitest/SKILL.md) |
+| Provide security best-practice guidance, a security review, or secure-by-default coding help when explicitly requested for JavaScript, TypeScript, Python, or Go | [`security-best-practices`](.agents/skills/security-best-practices/SKILL.md) |
 | Configure or troubleshoot Turborepo task pipelines, caching, package boundaries, or CI | [`turborepo`](.agents/skills/turborepo/SKILL.md) |
+
+| Technology and relevant work | Skill |
+|---|---|
+| Better Auth scaffolding, providers, adapters, or sessions | [`create-auth`](.agents/skills/create-auth/SKILL.md) for scaffolding. [`better-auth-best-practices`](.agents/skills/better-auth-best-practices/SKILL.md) for configuration and integration. |
+| Better Auth security controls | [`better-auth-security-best-practices`](.agents/skills/better-auth-security-best-practices/SKILL.md) |
+| Better Auth credential, organization, or MFA flows | [`email-and-password-best-practices`](.agents/skills/email-and-password-best-practices/SKILL.md) for credentials. [`organization-best-practices`](.agents/skills/organization-best-practices/SKILL.md) for the organization plugin. [`two-factor-authentication-best-practices`](.agents/skills/two-factor-authentication-best-practices/SKILL.md) for the two-factor plugin. |
+| React Flow nodes, edges, layout, or viewport behavior | [`react-flow`](.agents/skills/react-flow/SKILL.md) for implementation. [`react-flow-code-review`](.agents/skills/react-flow-code-review/SKILL.md) for review. |
+| Zod schemas, parsing, or validation errors | [`zod`](.agents/skills/zod/SKILL.md) |
+| Drizzle schema or query code, including tables, indexes, relations, joins, and inferred types | [`drizzle`](.agents/skills/drizzle/SKILL.md) within the approved database and migration conventions. |
+| URL query state implemented with nuqs | [`nuqs`](.agents/skills/nuqs/SKILL.md) |
+| TanStack project scaffolding, package tooling, or developer panels | [`tanstack-cli`](.agents/skills/tanstack-cli/SKILL.md) for scaffolding. [`tanstack-config`](.agents/skills/tanstack-config/SKILL.md) for package tooling. [`tanstack-devtools`](.agents/skills/tanstack-devtools/SKILL.md) for developer panels. |
+| TanStack data fetching, reactive collections, or state stores | [`tanstack-query`](.agents/skills/tanstack-query/SKILL.md) for server state. [`tanstack-db`](.agents/skills/tanstack-db/SKILL.md) for reactive collections. [`tanstack-store`](.agents/skills/tanstack-store/SKILL.md) for reactive state stores. |
+| TanStack forms, data tables, or virtualized lists | [`tanstack-form`](.agents/skills/tanstack-form/SKILL.md) for forms. [`tanstack-table`](.agents/skills/tanstack-table/SKILL.md) for table state. [`tanstack-virtual`](.agents/skills/tanstack-virtual/SKILL.md) for virtualization. |
+| TanStack AI SDK integration or Pacer scheduling | [`tanstack-ai`](.agents/skills/tanstack-ai/SKILL.md) for model calls, streaming, or tool calling. [`tanstack-pacer`](.agents/skills/tanstack-pacer/SKILL.md) for throttling, debouncing, queues, or batching. |
 
 ## Engineering standards
 

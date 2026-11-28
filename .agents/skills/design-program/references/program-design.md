@@ -12,7 +12,9 @@ Baseline: <approved epic, applicable SPEC/CONF/PROP IDs, interface contracts, ar
 
 ## Types and signatures
 
-<Code blocks in the repository language. Include public types and method signatures, input/output and errors. No implementation bodies.>
+<Code blocks in the repository language. Include types and method signatures, input/output and errors. Document every type and interface shown, including supporting aliases, and the other contract declarations. Add member comments for relevant guarantees and failure behavior. For TypeScript use the adopted TSDoc style. No implementation bodies.>
+
+<For persistence flows, show simple aggregate loads, named structured operation inputs, read-only context ports, and any atomic write contracts with their guarded effects.>
 
 ## Call stack
 

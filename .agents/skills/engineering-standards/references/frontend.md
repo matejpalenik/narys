@@ -1,6 +1,6 @@
 # Frontend engineering standards
 
-Apply to adopted UI technologies and relevant changes. Use [experience and design-system ownership](../../software-factory/references/experience-contract.md), the approved architecture and applicable language profile. These are engineering conventions, not a mandatory new stack or complete TypeScript standard.
+Apply to adopted UI technologies and relevant changes. Use [experience and design-system ownership](../../software-factory/references/experience-contract.md), the approved architecture and applicable language profile. For TypeScript and TSX, also use the adopted [typescript-standards](../../typescript-standards/SKILL.md); React components and hooks follow framework idioms. These are engineering conventions, not a mandatory new stack.
 
 ## Architecture and component contracts
 

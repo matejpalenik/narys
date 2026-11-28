@@ -27,10 +27,20 @@ A data-only projection, message, transport DTO or simple read result is not an a
 ## Persistence and consistency
 
 - Define a write repository only for aggregates that need persistence. Prefer narrowly scoped operations. Do not build a generic CRUD repository, a repository per table or an ORM pass-through that leaks sessions/query builders across the boundary.
+- Load aggregates by identity. Use a simple aggregate save when the use case only persists aggregate state. Include the expected version when optimistic concurrency requires it.
+- When an aggregate decision and related records must commit together, expose a narrow application-owned writer named for the atomic effect. State what commits together and which authorization, version or work-ownership guards are checked in the transaction. Return explicit conflict and failure outcomes. Introduce a general unit of work when use cases need to compose transactions themselves.
 - Place the repository contract in the consuming inner layer. Use domain ownership when it expresses a domain collection, or application ownership when it expresses use-case access. Do not define it in infrastructure. Implement the contract in infrastructure with explicit mappings between persistent representation and domain representation. A simple implementation may reuse data shapes if it preserves dependency direction and semantics.
 - Use explicit transaction ownership. Default to the application use case for unit-of-work control and one consistent write transaction where appropriate. Define isolation, conditional writes, retries and conflict semantics from the specification. An in-memory domain check alone cannot protect concurrent updates. Avoid persistence calls from entities and partial writes that leave invalid state.
-- Use read ports/projections for query models. Queries do not change business state and must respect authorization and tenant scope. Read-side access need not reconstruct aggregates. Keep ORM-specific APIs in adapters.
+- Use read ports for query models and read-only decision context. Queries do not change business state and must respect authorization and tenant scope. Read-side access need not reconstruct aggregates. Keep ORM-specific APIs in adapters.
 - When an external effect cannot share the same transaction, specify the consistency and recovery model. Use idempotency, compensation or transactional outbox only if needed. Do not claim exactly-once delivery from at-least-once transport.
+
+## Data Mapper
+
+Prefer explicit, reusable Data Mappers when persistence and domain representations differ materially or multiple callers need the same conversion. Keep the mapper in the feature's infrastructure and keep the domain independent of storage schemas and ORM types. Use focused boundary mappers for comparable translations from provider records or selected read projections. Direct field assignments can stay in the owning adapter. [Data Mapper pattern](https://martinfowler.com/eaaCatalog/dataMapper.html)
+
+- Translate the representation and preserve identity, scope and provenance. Validate untrusted record shape once at its boundary and use the domain's constructors or restore operation to enforce invariants.
+- Keep policy and side effects with their owners. Application services and protected adapters enforce authorization. Repositories, writers and read adapters select records, execute I/O and control transactions. Mappers translate the data they receive.
+- Protect material mappings with boundary tests. Check round trips where both directions are supported, invalid records and context mismatches where applicable. Preserve the distinction between absent and invalid data.
 
 ## Example
 

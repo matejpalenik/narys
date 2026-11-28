@@ -66,18 +66,33 @@ Use the installed skill for the authorized activity. Follow its required referen
 
 Use `first-principles` and `show-me` when available and useful. Do not load all skills for every task.
 
+### Application development skills
+
+Select the skills that match the task. Apply their guidance within the approved engineering baseline and UI foundation.
+
+| Activity | Skill |
+|---|---|
+| Apply or review adopted TypeScript conventions for architecture, typing, and runtime validation | [`typescript-standards`](.agents/skills/typescript-standards/SKILL.md) |
+| Write or review React and Next.js code for performance, including data fetching and bundle size | [`vercel-react-best-practices`](.agents/skills/vercel-react-best-practices/SKILL.md) |
+| Find, add, customize, or compose shadcn/ui components, or work with registries and presets | [`shadcn`](.agents/skills/shadcn/SKILL.md) |
+| Build accessible UI components or work with design tokens and component documentation | [`building-components`](.agents/skills/building-components/SKILL.md) |
+| Design reusable React component APIs or refactor component composition and shared state | [`vercel-composition-patterns`](.agents/skills/vercel-composition-patterns/SKILL.md) |
+| Verify changed Next.js behavior with a running development server and compatible browser tooling | [`next-dev-loop`](.agents/skills/next-dev-loop/SKILL.md) |
+| Audit UI accessibility, usability, or conformance with Vercel’s Web Interface Guidelines | [`web-design-guidelines`](.agents/skills/web-design-guidelines/SKILL.md) |
+| Configure or troubleshoot Turborepo task pipelines, caching, package boundaries, or CI | [`turborepo`](.agents/skills/turborepo/SKILL.md) |
+
 ## Engineering standards
 
-Use `engineering-standards` during architecture, program design, implementation and review. Use `python-standards` for affected Python code. For other languages use the adopted general standards and project conventions. Load only applicable references. Adopt or change standards through existing architecture and baseline approval. Do not silently migrate legacy code or use an unapproved skill revision. Escalate material conflicts. Independently verify applicable rules and actual check results.
+Use `engineering-standards` during architecture, program design, implementation and review. Use `typescript-standards` for TypeScript code in the first operational slice and `python-standards` for affected Python code. For other languages use the adopted general standards and project conventions. Load only applicable references. Adopt or change standards through existing architecture and baseline approval. Do not silently migrate legacy code or use an unapproved skill revision. Escalate material conflicts. Independently verify applicable rules and actual check results.
 
-Project adoption (complete and approve during architecture design):
+Adoption for the first operational slice:
 
 - General profile: `engineering-standards`.
-- Language profiles and scope: <select applicable profiles or existing approved conventions>.
-- Standards snapshot: <immutable approved locator and revision or content digest>.
-- Material exceptions: <accepted ADR/scoped design references or none>.
+- Language profile and scope: `typescript-standards` for new TypeScript web and worker code. Apply the general profile's frontend reference to the workspace UI.
+- Standards snapshot: SHA-256 `2e02e07dae2a17600eb8fa6c934b905d23a16e95429a6ae876b09f2a0e6f0e29` for the path-sorted file hash manifest of both profile directories. Applicable Software Factory and repository setup references retain their content at Git revision `585021a08441aa095cfb8352e48557591b516303`. See the approval record for the snapshot scope and verification command.
+- Material exceptions: None within the approved slice.
 
-These placeholders are not an approval. Preserve existing approved conventions until adoption. The advisory skill recommends a route only; it does not dispatch work.
+The product owner approved this adoption as part of the [first-slice engineering baseline](docs/approvals/v1-first-slice-baseline.md).
 
 ## Implementation and verification
 

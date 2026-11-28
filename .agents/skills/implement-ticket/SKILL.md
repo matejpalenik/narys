@@ -32,6 +32,8 @@ For each new acceptance behaviour, add a focused test at the highest useful publ
 
 Respect approved file plans, signatures, data and call stacks. Treat the issue as implementation scope, not as permission to alter the normative system contract. Preserve applicable SPEC guarantees and interface semantics. Stop affected work if the issue or implementation conflicts with the approved baseline. Use existing project conventions. Avoid unnecessary abstractions, dependencies and unrelated cleanup. Use real dependencies where they determine correctness. Disclose substitutes and their limits. Preserve authorization, state integrity, failure handling and compatibility. Stop before a material deviation or required new decision.
 
+For TypeScript, carry the intended [TSDoc](../typescript-standards/references/tooling.md#tsdoc) from the approved program design into source. Add or update it for affected contracts and check it against the implemented behavior.
+
 ### 3. Produce evidence
 
 Use `maintain-documentation` for affected documentation and baseline impact. Record structural reference and semantic consistency checks for the relevant scope. Link observed checks to SPEC/CONF and acceptance case IDs. Report unavailable or failed evidence, rather than redefining a conformance case. Update descriptive documentation and examples in the same scoped PR. Report conflicts with approved intent as defects or blockers, not documentation corrections. Use the formal coverage manifests to identify affected guarantees. Do not silently introduce new property requirements or weaken an existing one.

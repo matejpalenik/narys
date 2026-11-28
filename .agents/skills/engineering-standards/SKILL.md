@@ -10,7 +10,7 @@ description: >-
 
 Produce maintainable software with explicit domain semantics, narrow contracts, predictable dependency direction and independently verifiable behavior. Prefer the smallest design that meets the approved specification. Use these standards to make engineering decisions consistent, not to maximize the number of patterns or files.
 
-Read the [standards contract](../software-factory/references/standards.md) and [work contract](../software-factory/references/work-contract.md). Read the applicable architecture, ADRs, specification, code and scoped repository instructions. Select the relevant language standards. For Python, read [python-standards](../python-standards/SKILL.md). The language skill specializes these rules without changing them. Load only relevant reference sections.
+Read the [standards contract](../software-factory/references/standards.md) and [work contract](../software-factory/references/work-contract.md). Read the applicable architecture, ADRs, specification, code and scoped repository instructions. Select the adopted language standards for the affected code. For Python, read [python-standards](../python-standards/SKILL.md). For TypeScript (`.ts` and `.tsx`), read [typescript-standards](../typescript-standards/SKILL.md). For mixed-language work apply each profile only to its own scope. If a profile is already loaded, do not reload it; the language skill specializes the general rules without replacing them. During architecture and program design, use the applicable language profile before approving code structure, interfaces and tooling. During implementation and review, use it before editing or evaluating affected code. For other languages follow the adopted project conventions. Load only relevant reference sections.
 
 For UI work, use the [frontend engineering reference](references/frontend.md) and [experience contract](../software-factory/references/experience-contract.md). Apply the approved UI architecture, experience, design rules and real component contracts proportionately. Shadcn/ui and Storybook are defaults for compatible new React applications, not a mandatory technology stack. Do not use frontend conventions to bypass domain invariants, required checks or approved architecture.
 
@@ -22,7 +22,7 @@ Identify the approved standards revision, language, application or library type,
 
 ### 2. Establish domain and dependency boundaries
 
-Use [domain design](references/domain-driven-design.md) for bounded contexts, ubiquitous language, rich entities, value objects, aggregate invariants, domain services and repositories. Use [architecture and CQRS](references/architecture.md) for inward dependencies, consumer-owned protocols, composition, transaction boundaries and command/query separation. Use [code organization](references/code-organization.md) for capability-first layout and vertical slices. Keep infrastructure, transports, persistence and vendor types outside domain logic. The application coordinates use cases. Domain objects enforce intrinsic rules. A write operation cannot bypass the aggregate to change protected state.
+Use [domain design](references/domain-driven-design.md) for bounded contexts, ubiquitous language, rich entities, value objects, aggregate repositories and [atomic writes](references/domain-driven-design.md#persistence-and-consistency). Use [architecture and CQRS](references/architecture.md) for inward dependencies, consumer-owned protocols, composition, transaction boundaries and command/query separation. Use [code organization](references/code-organization.md) for capability-first layout, role-based grouping and vertical slices. Keep infrastructure, transports, persistence and vendor types outside domain logic. The application coordinates use cases. Domain objects enforce intrinsic rules. A write operation cannot bypass the aggregate to change protected state.
 
 | Classification | Rule |
 |---|---|
@@ -31,6 +31,8 @@ Use [domain design](references/domain-driven-design.md) for bounded contexts, ub
 | Conditional | Separate read stores, message buses, event sourcing, outbox, distributed transactions or advanced assurance only for an approved need. |
 
 Use a protocol at a substitution, dependency or external contract boundary. Do not create a protocol and implementation pair for every class. Keep the application core independent of concrete infrastructure. Prefer cohesive code over wrapper layers. Keep read and write models logically distinct when their responsibilities differ. Use one deployment and one data store by default when they meet the requirements.
+
+Prefer the Data Mapper pattern where persisted records and domain objects require meaningful translation. [Data Mapper guidance](references/domain-driven-design.md#data-mapper)
 
 ### 3. Establish operational and delivery standards
 

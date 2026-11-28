@@ -30,6 +30,10 @@ List every file expected to be created or changed for the proposed scope, with o
 
 Show the relevant domain types, method signatures, interfaces, input/output shapes, errors and state transitions in the project's language. Do not provide production implementation bodies. Define who owns each operation and the public contract. Preserve canonical interface syntax, required semantics and invariants. Verify compatibility between provider and consumer, including error handling and migration sequence when relevant. Do not redefine product behavior. Compare meaningful alternatives if a choice affects callers, dependencies or safety. Use a prototype only with approval to resolve a specific unknown.
 
+For persistence flows, show the aggregate load, domain operation and committed effect. Place read-only decision context on the analysis or query port that consumes it. Where related records must commit atomically, specify the application writer, named input, guards, and exact failure outcomes. [Persistence and consistency](../engineering-standards/references/domain-driven-design.md#persistence-and-consistency) · [TypeScript signatures](../typescript-standards/references/type-system.md#signatures-and-escape-hatches)
+
+Document every type and interface shown, including supporting aliases, and each class, function or named value set that defines a contract. Put a concise comment directly above the declaration to explain what it represents or owns. Document members and operations when callers need their guarantees, preconditions, units, side effects or failure outcomes. Use the adopted language style, including [TSDoc](../typescript-standards/references/tooling.md#tsdoc) for TypeScript. Keep broader rationale in the design prose and record unresolved contract details in **Least confident decisions**.
+
 ### 4. Specify the call stack
 
 For each principal flow, show the call order from entry point to domain logic, persistence or external effect and response. Include important failure paths, transaction boundaries, retries, authorization and concurrency where material. Use a call tree for static execution shape and a Mermaid sequence or state diagram when order or state changes matter.
@@ -40,7 +44,7 @@ List test names and what each must assert before implementation. Use the highest
 
 ### 6. Review and hand off
 
-Check the complete design against the applicable approved baseline and resolve conflicts using the [consistency contract](../software-factory/references/consistency.md). Present the complete five-part draft. Obtain explicit Program design gate approval of the exact revision. Record approved file plans, signatures, call stacks, assertions and decisions. Keep a temporary working draft outside canonical requirements (for example, in an explicitly agreed scratch directory) if needed for review; after ticket publication, the relevant approved design must be included in each issue or in an immutable linked artifact. Do not maintain two live program specifications. Keep any retained approved draft as a historical snapshot. Do not implement production code.
+Check the complete design against the applicable approved baseline and resolve conflicts using the [consistency contract](../software-factory/references/consistency.md). Review declaration documentation for coverage and accuracy against the contracts shown. Present the complete five-part draft. Obtain explicit Program design gate approval of the exact revision. Record approved file plans, signatures, call stacks, assertions and decisions. Keep a temporary working draft outside canonical requirements (for example, in an explicitly agreed scratch directory) if needed for review; after ticket publication, the relevant approved design must be included in each issue or in an immutable linked artifact. Do not maintain two live program specifications. Keep any retained approved draft as a historical snapshot. Do not implement production code.
 
 ## Response contract
 

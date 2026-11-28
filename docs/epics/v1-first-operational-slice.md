@@ -1,0 +1,52 @@
+# Follow an architecture-changing merge in a private workspace
+
+## Outcome
+
+A signed-in engineer can return to Narys after a merge and understand how one area of their software changed. A maintainer configures the area once. Narys generates a source-backed starting map and updates it in the background. From the canvas, the engineer can compare revisions, see what changed in behavior and responsibility, read the recorded reason, and follow the exact source that supports the change. This is the first operational V1 slice and the foundation for live Narys dogfooding.
+
+## Baseline
+
+- REQ-001 through REQ-004 cover architectural changes, existing rationale, deployment evidence, and starting map setup. Apply the amendments for human and agent merges and automatic publication. REQ-005 governs the later public release. [V1 scope](../requirements/product.md#8-release-scope) · [Merge coverage](../requirements/v1-merge-coverage.md) · [Automatic map setup](../requirements/v1-automated-map.md) · [Public release requirement](../requirements/v1-public-narys-demo.md)
+- The approved engineering baseline pins the applicable specification, requirements, experience, ADRs, and standards. The visual baseline pins the canvas, comparison, and inspector stories. Use the portions needed for this journey in the production workspace. [Engineering baseline](../approvals/v1-first-slice-baseline.md) · [Design approval and stories](../approvals/v1-design-baseline.md)
+
+## Scope
+
+| Capability | Allocated SPEC and CONF scope | Required observable result |
+|---|---|---|
+| Authorize access and set up one area | SPEC-001 and CONF-001 for a known path. SPEC-004, SPEC-024, CONF-002, CONF-015. SPEC-017 and CONF-012 for the private default. | An eligible maintainer selects a file or folder in the tracked repository. An eligible viewer can inspect the private workspace. The server protects setup, workspace pages, and evidence reads. |
+| Generate and preserve the map | SPEC-020, SPEC-021, CONF-001 for the path-based setup, CONF-008. | The first map publishes automatically while the browser is closed. Its revision and evidence are inspectable. Later analysis preserves earlier evidence. |
+| Ingest and attribute a merge | SPEC-005 through SPEC-007, SPEC-012, CONF-003, CONF-004, CONF-008. | Signed PR and branch updates feed durable work. A supported change uses its own before and after revisions. A verifiable branch change remains visible with unconfirmed PR attribution where appropriate. Replay and recovery converge on one effect. |
+| Explain what changed and why | SPEC-008 through SPEC-010, CONF-005, rationale cases in CONF-006. SPEC-011 and CONF-006 for the unconfirmed deployment state. | Show supported changes, unresolved claims, and concrete conflicts with their revision-bound evidence. Attribute rationale to its record or show missing rationale. Show merge and deployment separately. |
+| Follow progress and inspect evidence | SPEC-013, SPEC-018, SPEC-019, SPEC-022, SPEC-023, CONF-007, CONF-013, CONF-014. | Progress and supported results update in the open workspace. An existing comparison stays pinned. An independent later change remains inspectable during an earlier analysis gap. The engineer can use the complete comparison and evidence path with the keyboard. |
+| Honor the configured model route | SPEC-016 and the route isolation checks in CONF-011. | Analysis sends only permitted evidence to the chosen route. A failed local route keeps the same destination boundary. |
+
+**Non-goals.** The first slice uses a private workspace and path-based setup. Full description-to-area setup, guest publication and recovery, positive deployment confirmation, and broader route evaluation retain their V1 conformance work. Defer manual map correction, illustrative execution playback, repository-wide coverage, and additional provider integrations. The public product release includes the live Narys walkthrough after its guest access checks pass.
+
+## User or operational flow
+
+1. A maintainer connects the pilot repository and selects an area. The worker builds the starting map at an identified commit while the browser is closed.
+2. GitHub delivers a qualifying merge and the associated branch update. Narys records work before acknowledgement. The worker checks the relevant source and publishes supported results with short, pinned excerpts.
+3. An engineer opens **Recent merges** from the canvas and compares both revisions. They follow the decisive evidence and inspect the recorded rationale or its missing state. The interface keeps the selected comparison during incoming results and restores focus when it closes.
+4. During a recoverable analysis failure, the workspace identifies the gap and shows the last supported map. It can also show a later comparison with independently established revisions and evidence.
+
+## Epic acceptance
+
+| ID | Scenario | Observable result and evidence |
+|---|---|---|
+| AC-01 | Configure the Flask JSON area at the pinned before revision in a controlled private environment. Close the browser, then replay the recorded integration for #4692 and reopen. | The worker publishes the starting map and merge result. In the workspace, compare direct response construction with delegation to the app's provider. Follow the provider binding and built-in `json.dumps` at their pinned lines, read the PR rationale, and see deployment as unconfirmed. Check the result against the reference. [Flask findings](../research/2026-11-27-flask-merge-reference-case.md#4-findings-and-expected-canvas) |
+| AC-02 | In the Narys pilot repository, observe a qualifying live merge through the team-owned GitHub App. | The signed PR and branch deliveries reach the normal processing path. The engineer sees the supported change and its decisive evidence in the affected area. Exercise reversed event order, invalid or unrelated deliveries, architecture changes by different authors, and a standalone behavior change with the applicable fixtures. [CONF-003 and CONF-004](../../SPEC.md#4-conformance-cases) |
+| AC-03 | Check Flask's synthetic `orjson` claim, an unresolved source binding, and a change whose rationale is missing. | The inspector distinguishes possible divergence, unconfirmed behavior, and missing rationale. Show the supported part with its own evidence. Keep the performance motivation attributed to its source. [CONF-005 and CONF-006](../../SPEC.md#4-conformance-cases) |
+| AC-04 | Interrupt processing and replay deliveries. Exercise missed-merge recovery, uncertain PR attribution, and a later independently supported change while earlier analysis is unresolved. | Recover one published result per supported change. Preserve the last supported map and each comparison's own revisions and evidence. Verify that an open comparison and keyboard focus survive progress updates. [CONF-004, CONF-008, CONF-013, and CONF-014](../../SPEC.md#4-conformance-cases) |
+| AC-05 | Use the signed-in comparison and evidence journey with the keyboard and a spoken screen reader. Check protected access and model route failure separately. | Confirm named controls, progress announcements, source access, and focus return. Check server denial for unauthorized sessions and data requests, including revocation and failed access rechecks. Observe the configured route and verify local failure keeps that boundary. [CONF-002, CONF-007, CONF-011, and CONF-015](../../SPEC.md#4-conformance-cases) |
+
+**Intended use.** Ask an engineer to explain a real Narys merge using the workspace, then compare with a normal GitHub handoff. Record correctness and effort for identifying affected responsibility and behavior, finding rationale and decisive source, and recognizing what remains uncertain. Record which AST checks generalized and which claims stayed unconfirmed. Keep these observations separate from conformance results.
+
+## Dependencies and release conditions
+
+Use the existing architecture decisions for the runtime, repository access, persistence, and model gateway. The first run needs the GitHub App installation, reachable webhook endpoint, an operator-configured model route, and the approved local and CI checks. The production workspace needs the smallest foundation that supports the approved canvas journey. The Storybook baseline supplies visual and interaction references for that work. [Runtime and recovery](../../ARCHITECTURE.md#6-runtime-deployment-and-recovery) · [Repository approval and verification](../../REVIEW.md) · [UI foundation](../adr/adr-0015-v1-canvas-foundation.md)
+
+The operational acceptance environment stays private. Guest authorization, evidence disclosure, temporary unavailability, and withdrawal must pass their conformance checks before guests can access the live workspace. OS-level reduced-motion validation remains required for production use of the approved illustrative flows.
+
+## Approval
+
+Draft for product-owner approval of the exact epic and its scope allocation. GitHub will hold the parent issue when publication is authorized. Program design follows epic approval.

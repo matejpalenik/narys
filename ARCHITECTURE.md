@@ -2,9 +2,9 @@
 
 ## 1. Overview
 
-Status: pre-development architecture draft. The architecture baseline awaits approval. See [decisions and evolution](#8-decisions-and-evolution) for accepted decisions and open proposals.
+Status: approved target architecture for the first operational slice. See the [first-slice engineering baseline](docs/approvals/v1-first-slice-baseline.md) and [decisions and evolution](#8-decisions-and-evolution).
 
-Specification handoff approval: The product owner approved the original architecture draft as the basis for the V1 specification on November 27, 2026. The reviewed snapshot has SHA-256 `34d1bf2b2481f64b1bf33c80bd20b5d707c79ac2e7a62ca78fbde3fef7f890c9`. ADR-0017 and ADR-0018 record later approved directions. The joint engineering baseline remains pending. [Original reviewed snapshot](docs/approvals/architecture-34d1bf2b2481.snapshot) · [V1 specification draft](SPEC.md)
+Specification handoff approval: The product owner approved the original architecture draft as the basis for the V1 specification on November 27, 2026. The reviewed snapshot has SHA-256 `34d1bf2b2481f64b1bf33c80bd20b5d707c79ac2e7a62ca78fbde3fef7f890c9`. ADR-0017 and ADR-0018 record later approved directions. [Original reviewed snapshot](docs/approvals/architecture-34d1bf2b2481.snapshot) · [Approved V1 specification](SPEC.md)
 
 Narys helps engineers keep up with architectural changes in one selected area of one existing GitHub repository per pilot. It builds the starting map and publishes later merge observations automatically. It shows affected behavior with its source, available rationale, and separately sourced deployment evidence. The Narys dogfood pilot will use the workspace publication setting. [V1 discovery](docs/requirements/product.md) · [Automated map requirement](docs/requirements/v1-automated-map.md) · [Merge coverage](docs/requirements/v1-merge-coverage.md) · [Public demo requirement](docs/requirements/v1-public-narys-demo.md)
 
@@ -21,7 +21,7 @@ Narys helps engineers keep up with architectural changes in one selected area of
 
 ### Applicable engineering standards
 
-Propose the Software Factory general and frontend engineering standards from Narys Git revision `585021a08441aa095cfb8352e48557591b516303`, including their referenced contracts in that revision. Apply them to the web app and worker with repository TypeScript conventions. Use one domain boundary for the living architecture. Keep it independent of the UI and GitHub, SQLite, and model adapters. Separate setup and ingestion commands from workspace reads. Both use the same store. No material exception is proposed. Record adoption in `AGENTS.md` at the joint baseline review. [Engineering standards](.agents/skills/engineering-standards/SKILL.md) · [Frontend engineering](.agents/skills/engineering-standards/references/frontend.md) · [Standards adoption](.agents/skills/software-factory/references/standards.md)
+Use the adopted general, frontend, and TypeScript engineering standards recorded in AGENTS.md. Use one domain boundary for the living architecture. Keep it independent of the UI and GitHub, SQLite, and model adapters. Separate setup and ingestion commands from workspace reads. Both use the same store. [Standards adoption](AGENTS.md#engineering-standards)
 
 Propose one Node.js runtime version and an npm lockfile. Use the same build and check commands locally and in GitHub Actions. Start with TypeScript checking, lint, and the application build. Add behavior and dependency checks where the first working slice supplies real boundaries and assertions. Use Storybook for the approved React component verification. Select exact versions and commands during repository setup. [Canvas foundation](docs/adr/adr-0015-v1-canvas-foundation.md) · [Locked npm installs](https://docs.npmjs.com/cli/v11/commands/npm-ci/) · [Node.js checks in GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/nodejs)
 
@@ -97,6 +97,12 @@ Narys uses a gateway to analyze selected evidence with a team-run Ollama model o
 
 Check concrete claims in PR descriptions, commit messages, and related records against the source before and after integration. Apply the supported source changes to the map. Surface conflicting evidence as a possible divergence and incomplete evidence as unconfirmed. Keep goals such as improved performance as attributed rationale. [ADR-0008](docs/adr/adr-0008-map-update-evidence.md)
 
+### Evidence publication boundary
+
+The first slice separates the displayed map revision from the before and after revisions of a selected comparison. The worker publishes checked observations with short decisive excerpts and their pinned GitHub links in SQLite. The web process resolves evidence and related actions within the authorized workspace and the selected observation's revision or comparison. A supported later comparison can use its own evidence while the canvas keeps the last supported area map. [Design baseline approval](docs/approvals/v1-design-baseline.md) · [ADR-0019](docs/adr/adr-0019-revision-bound-evidence.md)
+
+For the first slice, use the model to propose observations and a small set of AST checks to establish their source support. Begin with explicit calls, declarations, and configuration bindings. Show unresolved claims as unconfirmed. Evaluate coverage against Flask and qualifying Narys merges. [ADR-0020](docs/adr/adr-0020-first-slice-source-checks.md)
+
 ### Material interfaces
 
 | Boundary | Provider or owner | Consumer | Contract and compatibility |
@@ -106,6 +112,7 @@ Check concrete claims in PR descriptions, commit messages, and related records a
 | Branch revision evidence | GitHub | Narys webhook endpoint and reconciliation | Signed target-branch `push` events on the same endpoint as pull request events. Use GitHub commit records to validate the scope and attribution of the transition. [GitHub push event](https://docs.github.com/en/webhooks/webhook-events-and-payloads#push) · [ADR-0009](docs/adr/adr-0009-merged-revision-attribution.md) |
 | Workspace reads and setup | Narys application | Project workspace | Better Auth handles GitHub sign-in and sessions. Narys owns server-side role checks for workspace reads and setup. [ADR-0013](docs/adr/adr-0013-workspace-access.md) · [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) |
 | Published workspace reads | Narys application | Anonymous visitors | Read-only responses for a deliberately published eligible workspace. Apply eligibility and field selection on the server before serving map or evidence data. [ADR-0017](docs/adr/adr-0017-workspace-publication.md) |
+| Revision-bound evidence reads | Living architecture queries in the web process | Canvas and inspector | Resolve the workspace, selected map revision or comparison, and observation together. Apply workspace access and evidence eligibility before returning the referenced evidence. [ADR-0019](docs/adr/adr-0019-revision-bound-evidence.md) |
 | Architecture analysis | LiteLLM for transport, Narys for analysis requests and observations | Narys worker | Use one interface for text input and candidate observations. Check response shape and evidence references in Narys. Use the same representative fixtures to assess hosted models and Ollama. [ADR-0016](docs/adr/adr-0016-pilot-gateway-product.md) |
 
 ## 6. Runtime, deployment, and recovery
@@ -146,6 +153,14 @@ Use one SQLite database on a local Compose volume shared by the web and worker. 
 | The selected model route preserves its data boundary | LiteLLM documents file-configured deployment, hosted providers, and Ollama. Ollama documents local-only inference. Container and provider route checks are pending. [Gateway decision](docs/adr/adr-0016-pilot-gateway-product.md) · [Ollama local mode](https://docs.ollama.com/faq#how-do-i-disable-ollamas-cloud-features) | Confirm destination and payload with hosted test routes and a team-run Ollama route. Induce a local failure and observe that it cannot send content to a hosted provider. Assess output quality separately. |
 | The workspace can build a useful starting map and explain changes | The prototype exercises merge inspection with synthetic evidence. The Flask reference supplies expected source relationships for automated setup. [Prototype observations](EXPERIENCE.md#8-prototypes-and-decisions) · [Flask reference](docs/research/2026-11-27-flask-merge-reference-case.md) | Exercise automated setup and merge updates against real repository evidence. Check the canvas with keyboard and assistive technology, including loading and recovery states. Compare engineer understanding with the team's normal GitHub handoff. |
 
+### First operational slice
+
+Use the existing web and worker design for one selected repository area in an authorized, private workspace. The worker generates and publishes a starting map, ingests an architecture-changing merge, and publishes its supported effect. The browser shows the affected responsibility, before and after revisions, decisive evidence, and recorded or missing rationale. In the architecture model, give elements identity independent of their display names, express scope with parent relationships, and give every relationship explicit endpoints. Use the design handoff to guide the production component and program design. [V1 specification](SPEC.md#3-observable-behavior) · [Design baseline approval](docs/approvals/v1-design-baseline.md)
+
+Use Flask #4692 with its pinned source and PR record as the controlled verification case. Feed its recorded revision pair into the worker in a test environment and check the result through the workspace. Use the team-owned GitHub App on Narys for live delivery and rehearsal of the same processing path. Verify that the worker can keep the published map and evidence coherent when work is interrupted or PR attribution is uncertain. Keep the deployed workspace private until the public authorization, withdrawal, and unavailable states pass their integrated checks. [Flask reference](docs/research/2026-11-27-flask-merge-reference-case.md#4-findings-and-expected-canvas) · [GitHub App decision](docs/adr/adr-0012-github-repository-access.md) · [CONF-004, CONF-008, CONF-010, and CONF-014](SPEC.md#4-conformance-cases)
+
+The first-slice approval includes this scope, the applicable V1 specification, the pinned visual baseline, the accepted ADRs, and the engineering standards snapshot. Define one epic around the demonstrable journey. Resolve the exact source check rules, storage types, read contracts, and verification cases in program design. [First-slice approval](docs/approvals/v1-first-slice-baseline.md) · [Applicable standards](#applicable-engineering-standards)
+
 ## 8. Decisions and evolution
 
 | ADR | Decision | Status | Affected area |
@@ -168,5 +183,7 @@ Use one SQLite database on a local Compose volume shared by the web and worker. 
 | [ADR-0016](docs/adr/adr-0016-pilot-gateway-product.md) | Use file-configured LiteLLM as the bundled V1 gateway, subject to route verification. | Accepted | Model routing, gateway operation, and evidence boundary |
 | [ADR-0017](docs/adr/adr-0017-workspace-publication.md) | Start workspaces private and allow opt-in public access for workspaces backed by public GitHub repositories. | Accepted | Workspace visibility, public authorization, and disclosure |
 | [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) | Generate the first map and publish later source-backed changes automatically. | Accepted | Map setup, publication, and revision-scoped evidence |
+| [ADR-0019](docs/adr/adr-0019-revision-bound-evidence.md) | Publish claims with decisive revision-pinned source excerpts and read them in the selected context. | Accepted | Evidence retention and publication boundary |
+| [ADR-0020](docs/adr/adr-0020-first-slice-source-checks.md) | Establish source support through a small set of AST checks for explicit code relationships. | Accepted | Source-check boundary for the first slice |
 
-The approved V1 specification defines observable behavior and conformance cases. Review the scoped canvas design through `design-system`, then establish the joint baseline with the applicable engineering standards. Select exact setup versions and pilot ingress settings before configuring deployment. [V1 specification](SPEC.md) · [Visual brief](DESIGN.md)
+The approved V1 specification defines observable behavior and conformance cases. Use the approved first-slice baseline for epic and program design. Select exact setup versions and pilot ingress settings before configuring deployment. [V1 specification](SPEC.md) · [First-slice approval](docs/approvals/v1-first-slice-baseline.md)

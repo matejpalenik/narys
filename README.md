@@ -352,11 +352,40 @@ See [ADR-0021](docs/adr/adr-0021-direct-model-inference.md), [ADR-0012](docs/adr
 
 ## Getting started
 
-Narys is currently in early development. A production installation workflow is not yet available.
+### Run the application starter
 
-The current interactive design prototype can be explored locally through Storybook.
+Use Node.js from [`.node-version`](.node-version) and the pnpm version in [`package.json`](package.json). On macOS, `better-sqlite3` may need the Xcode command-line tools and Python to build its native module.
 
-### Prerequisites
+```bash
+pnpm install --frozen-lockfile
+cp apps/narys/.env.example apps/narys/.env.local
+```
+
+Fill in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` for your GitHub App. Give the app read-only access to email addresses and register `http://localhost:3000/api/auth/callback/github` as its user authorization callback. Generate `BETTER_AUTH_SECRET` with `openssl rand -base64 32`. Set `BETTER_AUTH_URL` to the origin you will open in the browser.
+
+```bash
+pnpm db:migrate
+pnpm dev
+```
+
+Open [Narys on localhost](http://localhost:3000). Next.js loads the local dotenv files and validates required values with Zod before serving requests. In deployment, inject those same settings as environment variables. Apply the checked-in Drizzle migrations as an operator step before starting the server. `pnpm db:generate` generates SQL under `apps/narys/src/feature/architecture/infrastructure/migrations/sqlite/` when schema definitions change. Review and check in that SQL and its metadata.
+
+| Root command | What it runs |
+| --- | --- |
+| `pnpm test` | Vitest unit tests |
+| `pnpm test:integration` | Vitest tests against a temporary SQLite database and Better Auth |
+| `pnpm test:browser:install` | Install Chromium for Playwright |
+| `pnpm test:browser` | Build and exercise the starter in Chromium with an isolated database and GitHub authorization fixture |
+| `pnpm build` | Next.js production build |
+| `pnpm lint`, `pnpm typecheck`, `pnpm check:boundaries`, `pnpm format:check` | Source quality checks used by CI |
+
+The authentication starter exercises GitHub sign-in initiation and session storage. Workspace authorization and analysis are covered by the first operational slice. [Epic #1](https://github.com/matejpalenik/narys/issues/1)
+
+The [verify workflow](.github/workflows/verify.yml) runs on pull requests targeting `main` and pushes to `main`. It uses read-only permissions and test fixtures. The future public workspace processes verified merges to `main` through the GitHub App and worker, with inference credentials available only to that worker.
+
+### Explore the design prototype
+
+Prototype prerequisites:
 
 - Git
 - Node.js compatible with the prototype's dependencies

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalPassThroughEnv": ["CI", "NEXT_TELEMETRY_DISABLED"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
+        "DATABASE_PATH"
+      ]
+    },
+    "lint": {},
+    "typecheck": {},
+    "check:boundaries": {},
+    "test": {},
+    "test:integration": {
+      "cache": false
+    },
+    "test:browser": {
+      "dependsOn": ["build"],
+      "cache": false
+    }
+  }
+}

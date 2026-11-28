@@ -74,6 +74,8 @@ Do not start an unattended run when required policy or controller configuration 
 
 ## Repository tooling readiness
 
+The local Next.js foundation uses the root checks in [AGENTS.md](AGENTS.md#repository-specific-configuration). The `Narys verification` job in [verify.yml](.github/workflows/verify.yml) runs these commands with a frozen lockfile on pull requests and pushes to `main`. The browser command builds the application and starts it with its own SQLite file. Prototype and operational epic verification have separate evidence obligations. Review actual GitHub runs and branch protection before relying on remote enforcement.
+
 Use the actual canonical commands documented in AGENTS.md or the linked tooling configuration. Record the observed check results for the reviewed revision. For missing or changed tooling, use a separately authorized `setup-repository` operation. Configuration presence, local success and remote required-check enforcement are distinct. Do not accept a missing mandatory check, a placeholder test, an obsolete CI result or an unverified protected branch as evidence of readiness. Protect verification commands, dependency/toolchain configuration and workflow files according to the approved policy. Do not modify them to make a product ticket pass.
 
 ## UI verification (when applicable)

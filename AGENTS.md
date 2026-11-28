@@ -138,4 +138,8 @@ Use `design-experience` for material UX decisions and `design-system` for materi
 
 ## Repository-specific configuration
 
+The production workspace root is the pnpm and Turborepo monorepo. The Next.js application is `apps/narys`. Interpret `src/` and test paths in the first-slice design relative to that package. The existing Storybook prototype has its own lockfile and stays under `docs/design/prototypes/canvas-storybook/`.
+
+Run `pnpm install --frozen-lockfile` at the root. Use `pnpm test`, `pnpm test:integration`, `pnpm test:browser`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm check:boundaries`, and `pnpm format:check` for application verification. `pnpm test:browser:install` installs the local Chromium dependency. See the [starter instructions](README.md#run-the-application-starter) for local settings, migrations, and `pnpm dev`.
+
 Use `setup-repository` for authorized governance or tooling setup; use audit for read-only inspection. Verify actual local commands, CI results and remote controls. Initialization does not establish factory readiness. Do not silently overwrite existing settings or weaken checks. Use existing project instructions and verified tooling. When establishing the project, record the actual setup and verification commands and any local conventions here or in the appropriate scoped `AGENTS.md`. Keep this file current and concise. Do not duplicate skill procedures, policy values, or architecture details.

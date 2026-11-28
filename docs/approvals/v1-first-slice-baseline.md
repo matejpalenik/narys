@@ -41,9 +41,11 @@ The following content identities describe the revisions for review. GitHub repor
 
 | Artifact | SHA-256 |
 |---|---|
-| [Architecture](../../ARCHITECTURE.md) | `f1cbe327933e648c9c04c15afb1f033f211cce4454f23e7d10470753f0257c58` |
+| [Architecture at stack review](https://github.com/matejpalenik/narys/blob/4b7546264e8a41c1573a835c7a98309c45fd2a54/ARCHITECTURE.md) | `f1cbe327933e648c9c04c15afb1f033f211cce4454f23e7d10470753f0257c58` |
 | [Epic](../epics/v1-first-operational-slice.md) | `83cc10299dc7bfb1fa965af21f0e15f4ba3e28321335bb20589fe021f08d1ee2` |
 | [Program design](../epics/v1-first-slice-program-design.md) | `85f1b4b01a052a279b6a475f96214142b12d18d3eb45f7ffee9fbf197dfd567a` |
 | [GitHub issue #1](https://github.com/matejpalenik/narys/issues/1) body | `7bc87de4b6ba3ade878e7e6fc37d7d83e491ed0af25512512b4d0abb4973d60a` |
 | [GitHub issue #2](https://github.com/matejpalenik/narys/issues/2) body | `654cb3f0fc44b72f1e334ffff38ae5e2bb920d2972e42f255cf973a34da4b0a4` |
 | [GitHub issue #3](https://github.com/matejpalenik/narys/issues/3) body | `0b540b1d8fdca3938aff5f32c38479f1c7f34ddb2b4be367ed2a866da27d3356` |
+
+The owner later authorized repository bootstrap with pnpm, Turborepo, and `apps/narys/`. Use [the repository tooling guidance](../../AGENTS.md#repository-specific-configuration) for package-relative paths and the executable commands. The table preserves the stack review inputs.

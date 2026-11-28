@@ -23,7 +23,7 @@ Narys helps engineers keep up with architectural changes in one selected area of
 
 Use the adopted general, frontend, and TypeScript engineering standards recorded in AGENTS.md. Use one domain boundary for the living architecture. Keep it independent of the UI and GitHub, SQLite, and model adapters. Separate setup and ingestion commands from workspace reads. Both use the same store. [Standards adoption](AGENTS.md#engineering-standards)
 
-Propose one Node.js runtime version and an npm lockfile. Use the same build and check commands locally and in GitHub Actions. Use Vitest for unit and integration tests, including real SQLite transactions. Use Playwright Test for the integrated browser journey and Storybook for component verification. Apply the adopted TypeScript, lint, build, and dependency checks. Select exact versions and commands during repository setup. [Canvas foundation](docs/adr/adr-0015-v1-canvas-foundation.md) · [Locked npm installs](https://docs.npmjs.com/cli/v11/commands/npm-ci/) · [Node.js checks in GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/nodejs)
+Use pnpm workspaces and Turborepo, with the Next.js application under `apps/narys/`. The production app uses the root pnpm lockfile and Node.js version. Use the same build and check commands locally and in GitHub Actions. Use Vitest for unit and integration tests, including real SQLite transactions. Use Playwright Test for the integrated browser journey and Storybook for component verification. Apply the adopted TypeScript, lint, build, and dependency checks. [Starter commands](README.md#run-the-application-starter) · [Canvas foundation](docs/adr/adr-0015-v1-canvas-foundation.md)
 
 ## 3. System context (C4 L1)
 
@@ -128,7 +128,7 @@ For a per-merge explanation, identify the target branch revisions immediately be
 
 Use one TypeScript application with a Next.js web process and a Node.js worker process from the same release image. The worker reads durable pending work and keeps analysis outside the webhook request. Keep domain operations shared by the two entry points and transport and storage behind adapters. Run specialized Python tooling in a separate container if a demonstrated need arises. [ADR-0010](docs/adr/adr-0010-v1-application-runtime.md)
 
-Use one SQLite database on a local Compose volume shared by the web and worker. Use Drizzle ORM with `better-sqlite3` in persistence adapters. Drizzle Kit generates reviewed SQL under `src/feature/architecture/infrastructure/migrations/sqlite/`. The operator applies migrations before the web and worker start. Record webhook work durably before acknowledgement. Commit published map changes and their corresponding work state together. Use a consistent backup and recover later merges through GitHub reconciliation after restore. [ADR-0011](docs/adr/adr-0011-v1-persistence.md)
+Use one SQLite database on a local Compose volume shared by the web and worker. Use Drizzle ORM with `better-sqlite3` in persistence adapters. Drizzle Kit generates reviewed SQL under `apps/narys/src/feature/architecture/infrastructure/migrations/sqlite/`. The operator applies migrations before the web and worker start. Record webhook work durably before acknowledgement. Commit published map changes and their corresponding work state together. Use a consistent backup and recover later merges through GitHub reconciliation after restore. [ADR-0011](docs/adr/adr-0011-v1-persistence.md)
 
 ## 7. Verification and open design work
 

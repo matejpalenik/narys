@@ -27,7 +27,7 @@ function ComputeUnitSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Compute unit primitive", component: ComputeUnitSpecimen } satisfies Meta<typeof ComputeUnitSpecimen>;
+const meta = { title: "Narys/Illustrations/Compute unit", id: "narys-compute-unit-primitive", component: ComputeUnitSpecimen } satisfies Meta<typeof ComputeUnitSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

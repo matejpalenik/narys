@@ -26,7 +26,7 @@ function SchedulerSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Scheduler primitive", component: SchedulerSpecimen } satisfies Meta<typeof SchedulerSpecimen>;
+const meta = { title: "Narys/Illustrations/Scheduler", id: "narys-scheduler-primitive", component: SchedulerSpecimen } satisfies Meta<typeof SchedulerSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

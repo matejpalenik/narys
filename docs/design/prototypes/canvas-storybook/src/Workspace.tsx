@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ArrowDownRight, ArrowLeft, ArrowRight, Braces, Check, ChevronDown, CircleHelp,
   ChevronRight, GitBranch, GitMerge, History, Layers3, LogIn, ScanLine, Server, TriangleAlert, X,
@@ -7,15 +7,27 @@ import { ArchitectureGraph, mapControlId, type Direction, type MapSelection } fr
 import { Badge } from "./components/ui/badge";
 import { Button } from "./components/ui/button";
 import { afterRetry, checkoutGap, components, retryMerge, statusMerge, type MapRevision, type Merge } from "./fixture";
-import { ArchitectureGlyph } from "./architecture-visuals";
 import { ArchitectureNodeFace, paymentNodeChange, paymentNodeVisuals } from "./ArchitectureNodeFace";
 import { RetrySchematic } from "./IllustrativeFlow";
+import { RevisionSwitch } from "./RevisionSwitch";
+import { PaymentsScopeMap, UnavailableScope, paymentsObservations, type ArchitectureScope, type PaymentsObservation } from "./PaymentsExploration";
 
 export type Scenario = "ready" | "checking" | "gap" | "public";
+type Comparison = { merge: Merge; side: "before" | "after" };
+type Perspective = "structure" | "flow";
 type Panel =
   | { kind: "recent" }
-  | { kind: "merge"; merge: Merge; side: "before" | "after" }
-  | { kind: "map"; selection: MapSelection; revision: MapRevision; view?: "worker" };
+  | { kind: "merge" }
+  | { kind: "map"; selection: MapSelection }
+  | { kind: "observation"; id: PaymentsObservation };
+
+const scopePath: ArchitectureScope[] = ["context", "containers", "worker", "implementation"];
+const scopeLabels = {
+  context: "System context", containers: "Containers", worker: "Components", implementation: "Implementation",
+};
+const scopeTitles = {
+  context: "Payments system", containers: "Payments", worker: "Payments Worker", implementation: "Retry handler",
+};
 
 interface WorkspaceProps {
   direction: Direction;
@@ -24,6 +36,8 @@ interface WorkspaceProps {
   startWithChange?: boolean;
   schematic?: boolean;
   startAtWorker?: boolean;
+  startAtContext?: boolean;
+  simulateAnalysis?: boolean;
 }
 
 function Status({ kind, children }: { kind: "supported" | "unconfirmed"; children: string }) {
@@ -31,33 +45,37 @@ function Status({ kind, children }: { kind: "supported" | "unconfirmed"; childre
   return <Badge variant="outline" className="status-tag" data-kind={kind}><Icon size={13} aria-hidden="true" />{children}</Badge>;
 }
 
-function MergeDetails({ merge, side, onSide }: { merge: Merge; side: "before" | "after"; onSide: (side: "before" | "after") => void }) {
+function MergeDetails({ merge, side, onSide, onInspectImplementation }: {
+  merge: Merge;
+  side: "before" | "after";
+  onSide: (side: "before" | "after") => void;
+  onInspectImplementation?: () => void;
+}) {
   return (
     <>
       <div className="merge-facts">
         <span><GitMerge size={15} /> Merged</span>
         <time>{merge.date}</time>
       </div>
-      <div className="revision-switch" role="group" aria-label="Compare revisions">
-        {(["before", "after"] as const).map((value) => (
-          <Button key={value} variant="ghost" type="button" aria-pressed={side === value} onClick={() => onSide(value)}>
-            <span>{value === "before" ? "Before" : "After"}</span><code>{merge[value].commit}</code>
-          </Button>
-        ))}
-      </div>
+      <RevisionSwitch revisions={{ before: merge.before.commit, after: merge.after.commit }} side={side} onSide={onSide} />
       <section className="detail-section">
         <h3>What changed</h3>
-        <p>{merge.summary}</p>
-        {merge.id === 128 && (
+        {merge.id === 128
+          ? <p>{side === "before" ? "The cited Checkout failure path retries the payment directly." : merge.summary}</p>
+          : <p>{merge.summary}</p>}
+        {merge.id === 128 && side === "after" && (
           <div className="claim-list">
             <div><Status kind="supported">Supported by source</Status><p>Payments Worker handles queued retries.</p></div>
             <div><Status kind="unconfirmed">Unconfirmed</Status><p>Whether Checkout still retries directly.</p></div>
           </div>
         )}
+        {onInspectImplementation && <Button variant="outline" size="sm" type="button" data-implementation-opener="merge" onClick={onInspectImplementation}>
+          Inspect retry implementation <ArrowRight size={14} aria-hidden="true" />
+        </Button>}
       </section>
       <section className="detail-section deployment">
         <h3>Deployment</h3>
-        {merge.deployment ? <Status kind="supported">{`${merge.deployment.environment} at ${merge.deployment.commit}`}</Status> : <Status kind="unconfirmed">Deployment unconfirmed</Status>}
+        {merge.deployment ? <Status kind="supported">{`Confirmed in ${merge.deployment.environment} at ${merge.deployment.commit}`}</Status> : <Status kind="unconfirmed">Deployment unconfirmed</Status>}
       </section>
       <section className="detail-section">
         <h3>Why</h3>
@@ -66,7 +84,7 @@ function MergeDetails({ merge, side, onSide }: { merge: Merge; side: "before" | 
             <summary className="source-reference"><Braces size={14} />{merge.rationale.label}<ChevronDown size={14} /></summary>
             <p><strong>Documented intent</strong> · {merge.rationale.text}</p>
           </details>
-        ) : <p>Rationale unavailable.</p>}
+        ) : <p>Missing rationale</p>}
       </section>
       <details className="evidence-disclosure">
         <summary><Braces size={16} /><span>Inspect source at <code>{merge[side].commit}</code></span><ChevronDown size={15} /></summary>
@@ -91,7 +109,7 @@ function MapDetails({ selection, revision, detailed, comparing }: {
         {relationship.added && <Status kind="supported">Supported by source</Status>}
         <p>Relationship at <code>{revision.commit}</code></p>
         <span className="source-reference"><Braces size={14} />{source}</span>
-        {relationship.added && revision.commit === retryMerge.after.commit && <SourceDisclosure commit={revision.commit} path={source} />}
+        {relationship.added && <SourceDisclosure commit={revision.commit} path={source} />}
       </section>
     );
   }
@@ -114,17 +132,22 @@ function MapDetails({ selection, revision, detailed, comparing }: {
       {confidence === "unconfirmed" && <p>{checkoutGap}</p>}
       <p>{detailed ? "Container" : "Source"} at <code>{revision.commit}</code></p>
       <span className="source-reference"><Braces size={14} />{components[id].path}</span>
-      {detailed && revision.commit === retryMerge.after.commit && <SourceDisclosure commit={revision.commit} path={components[id].path} />}
+      {detailed && <SourceDisclosure commit={revision.commit} path={components[id].path} />}
     </section>
   );
 }
 
-function SourceDisclosure({ commit, path }: { commit: string; path: string }) {
-  const excerpt = retryMerge.evidence.after.find((item) => item.path === path);
+function SourceDisclosure({ commit, path, expanded = false }: { commit: string; path: string; expanded?: boolean }) {
+  const excerpts = [retryMerge, statusMerge].flatMap(merge => {
+    if (merge.after.commit === commit) return merge.evidence.after;
+    if (merge.before.commit === commit) return merge.evidence.before;
+    return [];
+  });
+  const excerpt = excerpts.find((item) => item.path === path);
   if (!excerpt) return null;
 
   return (
-    <details className="evidence-disclosure">
+    <details className="evidence-disclosure" open={expanded}>
       <summary><Braces size={16} /><span>Inspect source at <code>{commit}</code></span><ChevronDown size={15} /></summary>
       <div className="source-excerpts"><div><code>{excerpt.path}</code><pre>{excerpt.code}</pre></div></div>
     </details>
@@ -155,131 +178,145 @@ function WorkerDrawing() {
   );
 }
 
-export function Workspace({ direction, look, scenario = "ready", startWithChange = true, schematic = false, startAtWorker = false }: WorkspaceProps) {
-  const [panel, setPanel] = useState<Panel | null>(() => {
-    if (startAtWorker) return { kind: "map", selection: { kind: "component", id: "worker" }, revision: afterRetry, view: "worker" };
-    return startWithChange ? { kind: "merge", merge: retryMerge, side: "after" } : null;
-  });
-  const [contextOpen, setContextOpen] = useState(false);
+export function Workspace({
+  direction, look, scenario = "ready", startWithChange = true, schematic = false,
+  startAtWorker = false, startAtContext = false, simulateAnalysis = false,
+}: WorkspaceProps) {
+  const [scope, setScope] = useState<ArchitectureScope>(startAtWorker ? "worker" : startAtContext ? "context" : "containers");
+  const [perspective, setPerspective] = useState<Perspective>(startAtWorker ? "flow" : "structure");
+  const [implementationOrigin, setImplementationOrigin] = useState<ArchitectureScope | null>(null);
+  const [comparison, setComparison] = useState<Comparison | null>(startWithChange && !startAtWorker ? { merge: retryMerge, side: "after" } : null);
+  const [panel, setPanel] = useState<Panel | null>(startAtWorker
+    ? { kind: "observation", id: "handler" }
+    : startWithChange ? { kind: "merge" } : null);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
   const [showSignInNote, setShowSignInNote] = useState(false);
   const mergeTrigger = useRef<HTMLButtonElement>(null);
   const panelTitle = useRef<HTMLHeadingElement>(null);
-  const workerTitle = useRef<HTMLHeadingElement>(null);
-  const overviewTitle = useRef<HTMLHeadingElement>(null);
-  const inspector = useRef<HTMLElement>(null);
-  const overview = useRef<HTMLDivElement>(null);
-  const returnToMap = useRef<string | null>(null);
-  const pendingMapFocus = useRef<string | null>(null);
-  const previousPanel = useRef<Exclude<Panel, { kind: "map" }> | null>(null);
-  const returnToMerge = useRef<number | null>(null);
-  const pendingFocus = useRef<HTMLElement | null>(null);
-  const mounted = useRef(false);
-  const isBehind = scenario === "checking" || scenario === "gap";
-  const latest = isBehind ? retryMerge.before : afterRetry;
-  const merges = scenario === "checking" ? [statusMerge] : [retryMerge, statusMerge];
-  const visibleMap = panel?.kind === "merge" ? panel.merge[panel.side] : panel?.kind === "map" ? panel.revision : latest;
+  const mapTitle = useRef<HTMLHeadingElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const savedViews = useRef<Partial<Record<ArchitectureScope, { panel: Panel | null; perspective: Perspective; focus?: string }>>>({});
+  const requestedFocus = useRef<string | null>(null);
+  const inspectingFromRecent = useRef(false);
+
+  const checking = scenario === "checking" && !analysisComplete;
+  const gap = scenario === "gap";
+  const latest = checking || gap ? retryMerge.before : afterRetry;
+  const merges = checking || gap ? [statusMerge] : [retryMerge, statusMerge];
+  const visibleMap = comparison ? comparison.merge[comparison.side] : latest;
   const compactOverview = look === "industrial" || look === "carbon";
-  const workerView = compactOverview && panel?.kind === "map" && panel.view === "worker";
-  const comparing = (panel?.kind === "map" ? previousPanel.current : panel)?.kind === "merge";
-  const graphHidden = workerView || contextOpen;
-  const canExploreWorker = compactOverview && panel?.kind === "map" && panel.selection.kind === "component"
-    && panel.selection.id === "worker" && panel.revision.commit === retryMerge.after.commit;
+  const workerAvailable = visibleMap.retryPath;
+  const showFlow = scope === "worker" && perspective === "flow" && workerAvailable;
+  const innerScope = scope === "worker" || scope === "implementation";
+  const observation = panel?.kind === "observation" ? paymentsObservations[panel.id] : undefined;
+  const returnToComparison = implementationOrigin && savedViews.current[implementationOrigin]?.panel?.kind === "merge" && comparison;
+  let overlayTitle = "Recent merges";
+  if (panel?.kind === "merge" && comparison) overlayTitle = comparison.merge.title;
+  if (panel?.kind === "map") overlayTitle = panel.selection.kind === "component"
+    ? components[panel.selection.id].name : panel.selection.relationship.label;
+  if (observation) overlayTitle = observation.label;
 
-  let panelKey: string | undefined = panel?.kind;
-  if (panel?.kind === "merge") panelKey = `merge-${panel.merge.id}`;
-  if (workerView) panelKey = "worker-view";
-  else if (panel?.kind === "map") {
-    const { selection } = panel;
-    panelKey = `map-${selection.kind}-${selection.kind === "component" ? selection.id : selection.relationship.id}`;
-  }
   useLayoutEffect(() => {
-    if (!mounted.current) {
-      mounted.current = true;
-      if (startAtWorker) return;
+    const request = requestedFocus.current;
+    if (!request) return;
+    requestedFocus.current = null;
+    if (request === "map-title") { mapTitle.current?.focus(); return; }
+    if (request === "panel-title") { panelTitle.current?.focus(); return; }
+    if (request === "recent-merges") { mergeTrigger.current?.focus(); return; }
+
+    const target = stage.current?.querySelector<HTMLElement>(request);
+    if (target) { target.focus(); return; }
+    // The graph positions relationship controls after React Flow measures its nodes.
+    const fallback = mapTitle.current;
+    fallback?.focus();
+    const frame = requestAnimationFrame(() => {
+      if (document.activeElement === fallback) stage.current?.querySelector<HTMLElement>(request)?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [panel, perspective, scope]);
+
+  function openPanel(next: Panel) {
+    if (next.kind === "map" || next.kind === "observation") {
+      if (panel?.kind !== "map" && panel?.kind !== "observation") inspectingFromRecent.current = panel?.kind === "recent";
     }
-    const opener = pendingFocus.current;
-    pendingFocus.current = null;
-    const mapControl = pendingMapFocus.current;
-    pendingMapFocus.current = null;
-    if (mapControl) {
-      const map = overview.current;
-      opener?.focus();
-      if (!map) return;
+    requestedFocus.current = "panel-title";
+    setPanel(next);
+  }
 
-      // Relationship labels can remount after React Flow finishes its layout pass.
-      function restore() {
-        if (opener && document.activeElement !== opener) {
-          observer.disconnect();
-          return;
-        }
-        const target = map?.querySelector<HTMLButtonElement>(`[data-map-control="${mapControl}"]`);
-        target?.focus();
-        if (target && document.activeElement === target) observer.disconnect();
-      }
+  function comparisonPanel(): Panel | null {
+    return comparison ? { kind: "merge" } : null;
+  }
 
-      const observer = new MutationObserver(restore);
-      observer.observe(map, { childList: true, subtree: true });
-      const frame = requestAnimationFrame(restore);
-      const timeout = window.setTimeout(() => observer.disconnect(), 1000);
-      return () => {
-        observer.disconnect();
-        cancelAnimationFrame(frame);
-        window.clearTimeout(timeout);
-      };
+  function selectionControl(current: Panel | null) {
+    if (current?.kind === "map") return `[data-map-control="${mapControlId(current.selection)}"]`;
+    if (current?.kind === "observation") return `[data-map-control="observation-${current.id}"]`;
+    return null;
+  }
+
+  function closePanel() {
+    if (panel?.kind === "map" || panel?.kind === "observation") {
+      requestedFocus.current = selectionControl(panel) ?? "map-title";
+      setPanel(inspectingFromRecent.current ? { kind: "recent" } : comparisonPanel());
+      inspectingFromRecent.current = false;
+      return;
     }
-    if (opener?.isConnected) { opener.focus(); return; }
-    if (panelKey === "recent" && returnToMerge.current !== null) {
-      const row = inspector.current?.querySelector<HTMLButtonElement>(`[data-merge-id="${returnToMerge.current}"]`);
-      returnToMerge.current = null;
-      if (row) { row.focus(); return; }
-    }
-    if (contextOpen) overviewTitle.current?.focus();
-    else (workerView ? workerTitle.current : panelTitle.current)?.focus();
-  }, [panelKey, workerView, contextOpen, startAtWorker]);
+    requestedFocus.current = "recent-merges";
+    setComparison(null);
+    setPanel(null);
+  }
 
-  const closePanel = useCallback((kind: Panel["kind"]) => {
-    if (kind === "map") pendingMapFocus.current = returnToMap.current;
-    pendingFocus.current = kind === "map" ? overviewTitle.current : mergeTrigger.current;
-    setPanel(kind === "map" ? previousPanel.current : null);
-  }, []);
-
-  const backToRecent = useCallback((id: number) => {
-    returnToMerge.current = id;
+  function backToRecent() {
+    requestedFocus.current = comparison ? `[data-merge-id="${comparison.merge.id}"]` : "panel-title";
+    setComparison(null);
     setPanel({ kind: "recent" });
-  }, []);
+  }
 
   useEffect(() => {
     function onEscape(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
-      if (showSignInNote) { setShowSignInNote(false); return; }
-      if (panel?.kind === "merge") backToRecent(panel.merge.id);
-      else if (panel) closePanel(panel.kind);
+      if (showSignInNote) setShowSignInNote(false);
+      else if (panel?.kind === "merge") backToRecent();
+      else if (panel) closePanel();
     }
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
-  }, [backToRecent, closePanel, panel, showSignInNote]);
+  });
 
-  function openMapSelection(selection: MapSelection) {
-    returnToMap.current = mapControlId(selection);
-    if (panel?.kind !== "map") previousPanel.current = panel;
-    setPanel({ kind: "map", selection, revision: visibleMap });
+  function navigate(next: ArchitectureScope, entry: Panel | null = null, opener?: string) {
+    const deeper = scopePath.indexOf(next) > scopePath.indexOf(scope);
+    if (deeper) savedViews.current[scope] = { panel, perspective, focus: opener };
+    const saved = savedViews.current[next];
+    let restored = saved ? saved.panel : comparisonPanel();
+    if (restored?.kind === "merge" && !comparison) restored = null;
+    if (restored?.kind === "map" && restored.selection.kind === "relationship") {
+      const id = restored.selection.relationship.id;
+      const relationship = visibleMap.relationships.find(item => item.id === id);
+      restored = relationship ? { kind: "map", selection: { kind: "relationship", relationship } } : comparisonPanel();
+    }
+    if (!deeper && next === "worker" && !workerAvailable) restored = comparisonPanel();
+    requestedFocus.current = deeper ? entry ? "panel-title" : "map-title" : saved?.focus ?? selectionControl(restored) ?? "map-title";
+    setImplementationOrigin(next === "implementation" ? scope : null);
+    setScope(next);
+    setPerspective(deeper ? "structure" : saved?.perspective ?? "structure");
+    setPanel(deeper ? entry : restored);
   }
 
-  function openContext() {
-    if (panel?.kind === "map") setPanel(previousPanel.current);
-    setContextOpen(true);
+  function inspectImplementation(from: "merge" | "worker") {
+    navigate("implementation", { kind: "observation", id: "callback" }, `[data-implementation-opener="${from}"]`);
   }
 
-  function openContainers() {
-    pendingFocus.current = overviewTitle.current;
-    setContextOpen(false);
+  function selectMerge(merge: Merge) {
+    setComparison({ merge, side: "after" });
+    openPanel({ kind: "merge" });
   }
 
-  let overlayTitle = "Recent merges";
-  if (panel?.kind === "merge") overlayTitle = panel.merge.title;
-  if (panel?.kind === "map") {
-    const { selection } = panel;
-    overlayTitle = selection.kind === "component" ? components[selection.id].name : selection.relationship.label;
+  function selectObservation(id: PaymentsObservation) {
+    openPanel({ kind: "observation", id });
+  }
+
+  function showPerspective(next: "structure" | "flow") {
+    setPerspective(next);
+    if (next === "flow" && !panel) setPanel({ kind: "observation", id: "handler" });
   }
 
   return (
@@ -293,70 +330,88 @@ export function Workspace({ direction, look, scenario = "ready", startWithChange
           <span className="branch"><GitBranch size={14} /> main</span>
         </div>
         <div className="project-actions">
-          {scenario === "public" && <Button variant="ghost" size="sm" className="utility-button sign-in" type="button" onClick={() => setShowSignInNote((open) => !open)}><LogIn size={15} /> Sign in</Button>}
-          <Button variant="outline" size="sm" className="utility-button merge-trigger" type="button" ref={mergeTrigger} aria-expanded={panel?.kind === "recent" || panel?.kind === "merge"} aria-controls={panel ? "change-inspector" : undefined} onClick={() => setPanel({ kind: "recent" })}>
+          {simulateAnalysis && <Button variant="ghost" size="sm" type="button" aria-label="Complete simulated analysis"
+            aria-disabled={analysisComplete} onClick={() => setAnalysisComplete(true)}>Finish simulation</Button>}
+          {scenario === "public" && <Button variant="ghost" size="sm" className="utility-button sign-in" type="button" onClick={() => setShowSignInNote(open => !open)}><LogIn size={15} /> Sign in</Button>}
+          <Button variant="outline" size="sm" className="utility-button merge-trigger" type="button" ref={mergeTrigger}
+            aria-expanded={panel?.kind === "recent" || panel?.kind === "merge"} aria-controls={panel ? "change-inspector" : undefined}
+            onClick={() => openPanel({ kind: "recent" })}>
             <History size={16} /> <span>Recent merges</span>
           </Button>
         </div>
       </header>
 
-      <div className="stage">
+      <div className="stage" ref={stage}>
         <div className="map-title">
           {schematic ? (
             <nav className="schematic-breadcrumb" aria-label="Architecture levels">
-              {contextOpen ? <span aria-current="page">System context</span>
-                : <Button variant="ghost" size="sm" type="button" onClick={openContext}>System context</Button>}
-              {!contextOpen && <><ChevronRight size={12} aria-hidden="true" />
-                {workerView
-                  ? <Button variant="ghost" size="sm" type="button" onClick={() => closePanel("map")}>Containers</Button>
-                  : <span aria-current="page">Containers</span>}</>}
-              {workerView && <><ChevronRight size={12} aria-hidden="true" /><span aria-current="page">Worker components</span></>}
+              {scopePath.slice(0, scopePath.indexOf(scope) + 1).map((level, index) => (
+                <span className="scope-crumb" key={level}>
+                  {index > 0 && <ChevronRight size={12} aria-hidden="true" />}
+                  {level === scope ? <span aria-current="page">{scopeLabels[level]}</span>
+                    : <Button variant="ghost" size="sm" type="button" onClick={() => navigate(level)}>{scopeLabels[level]}</Button>}
+                </span>
+              ))}
             </nav>
-          ) : workerView
-            ? <Button variant="ghost" size="sm" className="map-back" type="button" onClick={() => closePanel("map")}><ArrowLeft size={14} /> Back to Payments map</Button>
+          ) : innerScope
+            ? <Button variant="ghost" size="sm" className="map-back" type="button" onClick={() => navigate("containers")}><ArrowLeft size={14} /> Back to Payments map</Button>
             : <span className="map-kicker"><ScanLine size={14} /> Architecture</span>}
-          {workerView ? <h1 ref={workerTitle} tabIndex={-1}>Payments Worker</h1>
-            : <h1 ref={overviewTitle} tabIndex={schematic ? -1 : undefined}>{contextOpen ? "Payments system" : "Payments"}</h1>}
-          <div className="map-meta">{panel?.kind === "merge" ? `${panel.side === "before" ? "Before" : "After"} #${panel.merge.id}` : "Map revision"} <code>{visibleMap.commit}</code></div>
-        </div>
-        <div ref={overview} className="overview-map" data-hidden={graphHidden} aria-hidden={graphHidden || undefined} inert={graphHidden}>
-          <ArchitectureGraph direction={direction} compact={compactOverview} schematic={schematic}
-            panelVisible={Boolean(panel)} compare={comparing} selected={panel?.kind === "map" ? panel.selection : undefined}
-            revision={visibleMap} onInspect={openMapSelection} />
-        </div>
-        {workerView && (schematic ? <RetrySchematic /> : <WorkerDrawing />)}
-        {contextOpen && (
-          <div className="system-context" data-inspector={Boolean(panel)}>
-            <Button variant="outline" type="button" className="context-system" onClick={openContainers}>
-              <ArchitectureGlyph kind="boundary" detail="detailed" />
-              <strong>Payments</strong>
-              <span>Open container map <ArrowRight size={14} aria-hidden="true" /></span>
-            </Button>
+          <h1 ref={mapTitle} tabIndex={-1}>{scopeTitles[scope]}</h1>
+          <div className="map-meta">
+            {comparison ? `${comparison.side === "before" ? "Before" : "After"} #${comparison.merge.id}` : "Map revision"} <code>{visibleMap.commit}</code>
+            {schematic && !comparison && <span>· Selected area</span>}
+            {comparison && panel?.kind !== "merge" && (
+              <Button variant="ghost" size="sm" type="button" onClick={() => openPanel({ kind: "merge" })}>View PR #{comparison.merge.id}</Button>
+            )}
           </div>
+          {schematic && scope === "worker" && workerAvailable && (
+            <Button variant="outline" size="sm" className="scope-perspective" type="button" onClick={() => showPerspective(showFlow ? "structure" : "flow")}>
+              {showFlow ? "Back to structure" : "View retry flow"} <ArrowRight size={14} aria-hidden="true" />
+            </Button>
+          )}
+          {schematic && scope === "implementation" && implementationOrigin && (
+            <Button variant="outline" size="sm" className="scope-perspective" type="button" onClick={() => navigate(implementationOrigin)}>
+              <ArrowLeft size={14} aria-hidden="true" /> {returnToComparison ? "Return to comparison" : `Return to ${scopeLabels[implementationOrigin]}`}
+            </Button>
+          )}
+        </div>
+        <div className="overview-map" data-hidden={scope !== "containers"} aria-hidden={scope !== "containers" || undefined} inert={scope !== "containers"}>
+          <ArchitectureGraph direction={direction} compact={compactOverview} schematic={schematic}
+            visible={scope === "containers"} panelVisible={Boolean(panel)} compare={Boolean(comparison)} selected={panel?.kind === "map" ? panel.selection : undefined}
+            revision={visibleMap} onInspect={(selection) => openPanel({ kind: "map", selection })} />
+        </div>
+        {scope === "context" && (
+          <PaymentsScopeMap scope={scope} panelVisible={Boolean(panel)} selected={panel?.kind === "observation" ? panel.id : undefined} onSelect={selectObservation} />
         )}
-        {isBehind && <div className="activity" data-scenario={scenario} role="status">{scenario === "gap" ? <TriangleAlert size={15} /> : <History size={15} />}{scenario === "gap" ? "Earlier merge analysis incomplete" : "Checking latest merges"}</div>}
+        {innerScope && !workerAvailable && <UnavailableScope commit={visibleMap.commit} panelVisible={Boolean(panel)} onBack={() => navigate("containers")} />}
+        {innerScope && workerAvailable && (showFlow
+          ? schematic ? <RetrySchematic panelVisible={Boolean(panel)} /> : <WorkerDrawing />
+          : <PaymentsScopeMap scope={scope} panelVisible={Boolean(panel)} selected={panel?.kind === "observation" ? panel.id : undefined} onSelect={selectObservation} />)}
+        {(checking || gap) && <div className="activity" data-scenario={scenario} role="status">{gap ? <TriangleAlert size={15} /> : <History size={15} />}{gap ? "Earlier merge analysis incomplete" : "Checking latest merges"}</div>}
+        {simulateAnalysis && analysisComplete && <span className="activity" role="status">Analysis complete · #128 available</span>}
         {showSignInNote && <div className="sign-in-note" role="status">GitHub sign-in is simulated in this Storybook preview.</div>}
 
         {panel && (
-          <aside className="inspector" id="change-inspector" ref={inspector} aria-labelledby="inspector-title">
+          <aside className="inspector" id="change-inspector" aria-labelledby="inspector-title">
             <div className="inspector-heading">
               <div className="inspector-topline">
                 {panel.kind === "merge" ? (
-                  <Button variant="ghost" size="sm" className="back-button" type="button" onClick={() => backToRecent(panel.merge.id)}><ArrowLeft size={15} /> Recent merges</Button>
+                  <Button variant="ghost" size="sm" className="back-button" type="button" onClick={backToRecent}><ArrowLeft size={15} /> Recent merges</Button>
                 ) : <span className="inspector-category">{panel.kind === "recent" ? "Architecture activity"
-                  : panel.selection.kind === "relationship" ? "Relationship"
-                  : workerView ? "Component evidence" : schematic ? "Container" : "Architecture element"}</span>}
-                <Button variant="outline" size="icon-sm" className="dismiss" type="button" aria-label="Close inspector" onClick={() => closePanel(panel.kind)}><X size={17} /></Button>
+                  : observation?.role ?? (panel.kind === "map" && panel.selection.kind === "relationship" ? "Relationship"
+                  : schematic ? "Container" : "Architecture element")}</span>}
+                <Button variant="outline" size="icon-sm" className="dismiss" type="button" aria-label="Close inspector"
+                  onClick={panel.kind === "merge" ? backToRecent : closePanel}><X size={17} /></Button>
               </div>
-              {panel.kind === "merge" && <span className="merge-id"><GitMerge size={14} /> PR #{panel.merge.id}</span>}
-              <h2 id="inspector-title" tabIndex={-1} ref={panelTitle}>{workerView ? "Source evidence" : overlayTitle}</h2>
+              {panel.kind === "merge" && comparison && <span className="merge-id"><GitMerge size={14} /> PR #{comparison.merge.id}</span>}
+              <h2 id="inspector-title" tabIndex={-1} ref={panelTitle}>{showFlow && observation ? "Source evidence" : overlayTitle}</h2>
             </div>
             <div className="inspector-body">
               {panel.kind === "recent" && (
                 <ul className="merge-list" aria-label="Recent architecture merges">
-                  {merges.map((merge) => (
+                  {merges.map(merge => (
                     <li key={merge.id}>
-                      <Button variant="ghost" type="button" data-merge-id={merge.id} onClick={() => setPanel({ kind: "merge", merge, side: "after" })}>
+                      <Button variant="ghost" type="button" data-merge-id={merge.id} onClick={() => selectMerge(merge)}>
                         <span className="list-icon"><GitMerge size={17} /></span>
                         <span><strong>{merge.title}</strong><small>#{merge.id} · {merge.date}</small></span>
                         <ArrowDownRight size={17} className="list-arrow" />
@@ -365,13 +420,50 @@ export function Workspace({ direction, look, scenario = "ready", startWithChange
                   ))}
                 </ul>
               )}
-              {panel.kind === "merge" && <MergeDetails key={panel.merge.id} merge={panel.merge} side={panel.side} onSide={(side) => setPanel({ ...panel, side })} />}
+              {panel.kind === "merge" && comparison && <MergeDetails key={comparison.merge.id} merge={comparison.merge} side={comparison.side}
+                onSide={side => setComparison({ ...comparison, side })}
+                onInspectImplementation={schematic && scope !== "implementation" && comparison.merge.id === 128 && comparison.side === "after"
+                  ? () => inspectImplementation("merge") : undefined} />}
               {panel.kind === "map" && (
                 <>
-                  <MapDetails selection={panel.selection} revision={panel.revision} detailed={schematic && !workerView} comparing={comparing} />
-                  {canExploreWorker && !workerView && <Button variant="outline" size="sm" className="explore-worker" type="button" onClick={() => setPanel({ ...panel, view: "worker" })}>Explore component <ArrowRight size={14} /></Button>}
-                  {workerView && <SourceDisclosure commit={panel.revision.commit} path={components.worker.path} />}
+                  <MapDetails selection={panel.selection} revision={visibleMap} detailed={schematic} comparing={Boolean(comparison)} />
+                  {compactOverview && panel.selection.kind === "component" && panel.selection.id === "worker" && (
+                    workerAvailable
+                      ? <Button variant="outline" size="sm" className="explore-worker" type="button" onClick={() => {
+                          navigate("worker");
+                          if (!schematic) {
+                            setPerspective("flow");
+                            setPanel({ kind: "observation", id: "handler" });
+                          }
+                        }}>Explore {schematic ? "components" : "component"} <ArrowRight size={15} /></Button>
+                      : schematic && <p className="scope-inspector-note">Worker internals are unavailable in the source excerpt for this revision.</p>
+                  )}
+                  {schematic && workerAvailable && panel.selection.kind === "component" && panel.selection.id === "worker" && (
+                    <Button variant="ghost" size="sm" type="button" data-implementation-opener="worker" onClick={() => inspectImplementation("worker")}>
+                      Inspect retry implementation <ArrowRight size={14} aria-hidden="true" />
+                    </Button>
+                  )}
                 </>
+              )}
+              {panel.kind === "observation" && observation && (
+                <section className="detail-section map-detail">
+                  <p>{observation.description}</p>
+                  <p>Revision <code>{visibleMap.commit}</code></p>
+                  {scope === "context" && <p className="scope-inspector-note">Synthetic context fixture for the selected area.</p>}
+                  {scope === "context" && panel.id === "payments" && <Button variant="outline" size="sm" type="button"
+                    onClick={() => navigate("containers")}>Explore containers <ArrowRight size={15} /></Button>}
+                  {innerScope && workerAvailable && <>
+                    <Status kind="supported">Supported by fixture source</Status>
+                    <SourceDisclosure commit={visibleMap.commit} path={components.worker.path} expanded={scope === "implementation"} />
+                  </>}
+                  {scope === "worker" && panel.id === "handler" && workerAvailable && (
+                    <Button variant="outline" size="sm" className="explore-worker" type="button"
+                      data-implementation-opener="handler"
+                      onClick={() => navigate("implementation", { kind: "observation", id: "callback" }, '[data-implementation-opener="handler"]')}>
+                      Explore implementation <ArrowRight size={15} aria-hidden="true" />
+                    </Button>
+                  )}
+                </section>
               )}
             </div>
           </aside>

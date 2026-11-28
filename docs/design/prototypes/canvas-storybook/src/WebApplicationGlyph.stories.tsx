@@ -26,7 +26,7 @@ function WebApplicationSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Web Application primitive", component: WebApplicationSpecimen } satisfies Meta<typeof WebApplicationSpecimen>;
+const meta = { title: "Narys/Illustrations/Web Application", id: "narys-web-application-primitive", component: WebApplicationSpecimen } satisfies Meta<typeof WebApplicationSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

@@ -46,7 +46,7 @@ function MotionSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Worker primitive", component: MotionSpecimen } satisfies Meta<typeof MotionSpecimen>;
+const meta = { title: "Narys/Illustrations/Worker", id: "narys-worker-primitive", component: MotionSpecimen } satisfies Meta<typeof MotionSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

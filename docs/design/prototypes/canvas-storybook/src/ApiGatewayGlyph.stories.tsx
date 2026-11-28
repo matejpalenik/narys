@@ -26,7 +26,7 @@ function ApiGatewaySpecimen() {
   );
 }
 
-const meta = { title: "Narys/API Gateway primitive", component: ApiGatewaySpecimen } satisfies Meta<typeof ApiGatewaySpecimen>;
+const meta = { title: "Narys/Illustrations/API Gateway", id: "narys-api-gateway-primitive", component: ApiGatewaySpecimen } satisfies Meta<typeof ApiGatewaySpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

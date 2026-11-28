@@ -24,6 +24,18 @@ const sampleWorker: NodePresentation = {
   technology: { id: "python", source: "Technology assigned in the specimen fixture." },
 };
 
+function DensitySection({ standalone = false }: { standalone?: boolean }) {
+  const Heading = standalone ? "h1" : "h2";
+  return (
+    <section id="density-fixture" aria-labelledby="specimen-density">
+      <Heading id="specimen-density">Synthetic density fixture · 22 nodes</Heading>
+      <p>Design-system sample. The nodes and relationships do not represent Payments or any real project.</p>
+      <p>Select a node to inspect its incoming and outgoing relationships. Zoom in for canvas labels.</p>
+      <DensityFixture />
+    </section>
+  );
+}
+
 function CanvasSpecimen() {
   return (
     <main className="narys specimen" data-direction="light" data-look="carbon" data-schematic="true">
@@ -122,11 +134,7 @@ function CanvasSpecimen() {
           </IllustrationPlayback>
         </section>
 
-        <section id="density-fixture" aria-labelledby="specimen-density">
-          <h2 id="specimen-density">Synthetic density fixture · 22 nodes</h2>
-          <p>Design-system sample. The nodes and relationships do not represent Payments or any real project.</p>
-          <DensityFixture />
-        </section>
+        <DensitySection />
       </div>
     </main>
   );
@@ -137,3 +145,11 @@ const meta = { title: "Narys/Canvas specimen", component: CanvasSpecimen } satis
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const VisualLanguage: Story = {};
+export const Density: Story = {
+  name: "Density fixture",
+  render: () => (
+    <main className="narys specimen" data-direction="light" data-look="carbon" data-schematic="true">
+      <div className="specimen-sheet density-specimen"><DensitySection standalone /></div>
+    </main>
+  ),
+};

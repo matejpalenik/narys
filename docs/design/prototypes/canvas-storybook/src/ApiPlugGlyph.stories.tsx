@@ -34,7 +34,7 @@ function InvocationSpecimen() {
   );
 }
 
-const meta = { title: "Narys/API primitive", component: InvocationSpecimen } satisfies Meta<typeof InvocationSpecimen>;
+const meta = { title: "Narys/Illustrations/API", id: "narys-api-primitive", component: InvocationSpecimen } satisfies Meta<typeof InvocationSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

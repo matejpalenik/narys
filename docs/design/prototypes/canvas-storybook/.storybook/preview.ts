@@ -6,7 +6,10 @@ import "../src/workspace.css";
 import "../src/schematic.css";
 
 const preview: Preview = {
-  parameters: { layout: "fullscreen" },
+  parameters: {
+    layout: "fullscreen",
+    options: { storySort: { order: ["Narys", ["Architecture canvas", "Canvas specimen", "Illustrations", "Archive (deprecated)"]] } },
+  },
 };
 
 export default preview;

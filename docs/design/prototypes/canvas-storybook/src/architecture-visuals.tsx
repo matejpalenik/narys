@@ -6,8 +6,10 @@ import { CacheGlyph } from "./CacheGlyph";
 import { ComputeUnitGlyph } from "./ComputeUnitGlyph";
 import { DatabaseGlyph } from "./DatabaseGlyph";
 import { EventBusGlyph } from "./EventBusGlyph";
+import { EventStreamGlyph } from "./EventStreamGlyph";
 import { ObjectStorageGlyph } from "./ObjectStorageGlyph";
 import { SchedulerGlyph } from "./SchedulerGlyph";
+import { ServerlessFunctionGlyph } from "./ServerlessFunctionGlyph";
 import { WebApplicationGlyph } from "./WebApplicationGlyph";
 import { WorkerGlyph } from "./WorkerGlyph";
 
@@ -17,10 +19,12 @@ export const primitiveNames = {
   api: "API connector",
   worker: "Worker mechanism",
   scheduler: "Scheduler",
+  serverless: "Serverless function",
   database: "Database",
   cache: "Cache",
   queue: "Message queue",
   bus: "Event bus",
+  stream: "Event stream",
   gateway: "API Gateway",
   storage: "Object storage",
   boundary: "Boundary",
@@ -48,8 +52,10 @@ export function ArchitectureGlyph({ kind, detail = "compact", draw = false }: {
   if (kind === "gateway") return <ApiGatewayGlyph />;
   if (kind === "queue") return <MessageQueueGlyph />;
   if (kind === "scheduler") return <SchedulerGlyph />;
+  if (kind === "serverless") return <ServerlessFunctionGlyph />;
   if (kind === "service") return <ComputeUnitGlyph />;
   if (kind === "storage") return <ObjectStorageGlyph />;
+  if (kind === "stream") return <EventStreamGlyph />;
   if (kind === "web") return <WebApplicationGlyph />;
   if (kind === "worker") return <WorkerGlyph />;
   const { shell, detail: interior, ports } = geometry[kind];

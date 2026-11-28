@@ -48,17 +48,42 @@ The compact node, detailed inspector, and worker deep dive represent degrees of 
 
 The retry playback illustrates the queued message, handler, and API call in the existing source at `8e24c0a`. Its label identifies it as an illustration with no runtime data. The specimen shows the three visual families and a separately labeled 22-node synthetic graph. [Carbon motion](https://www.carbondesignsystem.com/building-blocks/foundations/motion/overview) · [V1 evidence rules](SPEC.md#evidence-for-a-change-claim)
 
+### Payments workspace experience candidate
+
+The container map is the return view. **System context** gives orientation above it. Selecting a node or relationship opens its inspector. **Explore components** changes scope, and canvas zoom changes visual scale. In **Payments · Return after a merge**, open **Recent merges**, select PR #128, compare **Before** and **After**, and inspect the Payments Worker. **Inspect retry implementation** in either the worker or the merge inspector opens the relevant source excerpt and code cards. The guided route reaches the same excerpt through **Explore components**, **Retry handler**, and **Explore implementation**. **View PR #128** opens the merge and its recorded rationale within the current scope. The return action restores the starting scope, inspection, viewport and keyboard focus while retaining the PR comparison and revision. [Approved workspace interaction](EXPERIENCE.md#4-information-architecture) · [Comparison and evidence requirements](SPEC.md#3-observable-behavior)
+
+The context diagram identifies its shopper and external-system relationships as synthetic orientation within the selected area. At `8e24c0a`, the worker and code views use the job registration and API call in the Payments fixture. The compact implementation cards show the registration call, anonymous callback, and retry call. If a reviewer switches to a revision without the worker excerpt, the view describes that gap and links back to Containers. [Payments fixture](docs/design/prototypes/canvas-storybook/src/fixture.ts)
+
+The product owner approved **View retry flow** as a contextual action within the worker scope. The queue, worker, API, and connection pulses share one cycle. The entry point stays next to the worker and preserves the scope and comparison.
+
+The checking story supplies a controlled fixture update. Open PR #124, choose **Before**, and then use **Finish simulation**. The current comparison retains its selected revision while PR #128 becomes available in Recent merges. The gap story keeps the last supported map visible. These fixtures exercise parts of CONF-005, CONF-006, CONF-007, CONF-013, and CONF-014. Production analysis, contradictory-claim handling, and an independent later merge across an unresolved gap require separate conformance evidence. [Conformance cases](SPEC.md#4-conformance-cases)
+
+### Flask source-level change candidate
+
+The Flask PR #4692 inspector names who builds the JSON response at each revision. Before, `jsonify()` built it directly. After, `jsonify()` delegates responsibility to the app’s configurable `JSONProvider`. The **Configuration point** and **Default implementation** actions lead to the pinned lines for `Flask.json_provider_class` and `DefaultJSONProvider.response()`. The inspector links the recorded performance motivation under **Documented intent** and marks the performance outcome **Unverified**. Deployment and test-source evidence have separate entries. [Flask reference case](docs/research/2026-11-27-flask-merge-reference-case.md) · [Pinned comparison](https://github.com/pallets/flask/compare/c356c6da5f25ba70bd53448ff1d1bf6ad6967fd5...67310ab49613be97a121053dfbbced14657b96eb)
+
+Classic code cards are the standard for implementation-level elements in this design. The heading gives the symbol kind and name. A separate compartment gives the signatures or expressions relevant to the architectural question. Flask shows the source-backed inheritance with a hollow arrowhead. Payments uses the same cards for the job registration, callback and retry call. [Code symbol card](docs/design/prototypes/canvas-storybook/src/CodeSymbolCard.tsx)
+
+### Density fixture
+
+The synthetic fixture adds fan-in, fan-out and cross-group dependencies to the existing 22 nodes. Routes use separate orthogonal lanes where possible. At map fit, select a node to read its incoming and outgoing relationships in the inspector. Select a relationship to highlight its path and inspect its source and target. Zoom controls center the inspection and expose labels at close zoom. **Fit View** recovers the whole map. [Density fixture](docs/design/prototypes/canvas-storybook/src/DensityFixture.tsx)
+
 ### Stories
 
 The disposable preview uses Storybook with the React/Vite adapter and React Flow for the graph. It uses the shadcn/ui New York Radix Button for workspace controls and the Badge for evidence status. Preview theme tokens drive the shadcn/ui colors. The visual comparison stories start with PR #128 open. [Preview package](docs/design/prototypes/canvas-storybook/package.json) · [shadcn/ui Button](https://ui.shadcn.com/docs/components/radix/button) · [shadcn/ui Badge](https://ui.shadcn.com/docs/components/radix/badge)
 
 | Story | Local preview |
 |---|---|
-| Payments architecture overview | [Open the overview](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-overview&viewMode=story) |
+| Payments · Return after a merge | [Start at the Payments workspace](http://127.0.0.1:6006/?path=/story/narys-architecture-canvas--payments-overview) |
+| Payments checking merges | [Open the progress and update story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-checking-merges&viewMode=story) |
+| Payments analysis gap | [Open the unresolved-gap story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-analysis-gap&viewMode=story) |
+| Payments architectural exploration | [Open the system context](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-exploration&viewMode=story) |
 | Payments Worker detail | [Open the retry schematic](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-worker-detail&viewMode=story) |
+| Flask PR #4692 | [Compare JSON response construction](http://127.0.0.1:6006/?path=/story/narys-architecture-canvas-flask--json-provider-change) |
 | Web Application primitive | [Compare static artwork and animated page loading](http://127.0.0.1:6006/iframe.html?id=narys-web-application-primitive--page-loading&viewMode=story) |
 | Worker primitive | [Compare idle, processing, and paused](http://127.0.0.1:6006/iframe.html?id=narys-worker-primitive--motion-states&viewMode=story) |
 | Scheduler primitive | [Compare static artwork and the animated trigger cycle](http://127.0.0.1:6006/iframe.html?id=narys-scheduler-primitive--trigger-cycle&viewMode=story) |
+| Serverless Function primitive | [Compare static artwork and the animated invocation cycle](http://127.0.0.1:6006/iframe.html?id=narys-serverless-function-primitive--invocation-cycle&viewMode=story) |
 | API primitive | [Compare disconnected, live, and paused at contact](http://127.0.0.1:6006/iframe.html?id=narys-api-primitive--invocation-cycle&viewMode=story) |
 | API Gateway primitive | [Compare static and animated request routing](http://127.0.0.1:6006/iframe.html?id=narys-api-gateway-primitive--request-routing&viewMode=story) |
 | Database primitive | [Compare the static mark and animated access cycle](http://127.0.0.1:6006/iframe.html?id=narys-database-primitive--access-cycle&viewMode=story) |
@@ -66,14 +91,15 @@ The disposable preview uses Storybook with the React/Vite adapter and React Flow
 | Compute unit primitive | [Compare the static mark and animated processing cycle](http://127.0.0.1:6006/iframe.html?id=narys-compute-unit-primitive--processing-cycle&viewMode=story) |
 | Object storage primitive | [Compare static, read, and write](http://127.0.0.1:6006/iframe.html?id=narys-object-storage-primitive--operations&viewMode=story) |
 | Event Bus primitive | [Compare static and animated event distribution](http://127.0.0.1:6006/iframe.html?id=narys-event-bus-primitive--event-distribution&viewMode=story) |
+| Event Stream primitive | [Compare static, read, and append](http://127.0.0.1:6006/iframe.html?id=narys-event-stream-primitive--operations&viewMode=story) |
 | Architectural change review | [Open PR #128](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--payments-change-review&viewMode=story) |
 | Architecture specimens | [Open the specimen sheet](http://127.0.0.1:6006/iframe.html?id=narys-canvas-specimen--visual-language&viewMode=story) |
-| Synthetic density fixture | [Open the 22-node graph](http://127.0.0.1:6006/iframe.html?id=narys-canvas-specimen--visual-language&viewMode=story#density-fixture) |
-| Light · Carbon palette | [Open the full-size story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--light-carbon&viewMode=story) |
-| Dark · Graphite | [Open the full-size story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--dark-focused&viewMode=story) |
-| Dark · Graphite industrial | [Open the full-size story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--dark-industrial&viewMode=story) |
-| Dark · Blueprint | [Open the full-size story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--dark-blueprint&viewMode=story) |
-| Earlier light mockup | [Open the comparison story](http://127.0.0.1:6006/iframe.html?id=narys-architecture-canvas--light-compact&viewMode=story) |
+| Synthetic density fixture | [Open the dedicated 22-node story](http://127.0.0.1:6006/?path=/story/narys-canvas-specimen--density) |
+| Archive · Early light Carbon palette | [Open the archived story](http://127.0.0.1:6006/?path=/story/narys-archive-deprecated-architecture-canvas--light-carbon) |
+| Archive · Dark Graphite | [Open the archived story](http://127.0.0.1:6006/?path=/story/narys-archive-deprecated-architecture-canvas--dark-focused) |
+| Archive · Dark Graphite industrial | [Open the archived story](http://127.0.0.1:6006/?path=/story/narys-archive-deprecated-architecture-canvas--dark-industrial) |
+| Archive · Dark Blueprint | [Open the archived story](http://127.0.0.1:6006/?path=/story/narys-archive-deprecated-architecture-canvas--dark-blueprint) |
+| Archive · Earlier light mockup | [Open the archived story](http://127.0.0.1:6006/?path=/story/narys-archive-deprecated-architecture-canvas--light-compact) |
 | Merge progress, earlier gap, and published workspace | [Open the Storybook story index](http://127.0.0.1:6006/) |
 
 Start the installed preview from the repository root with `npm --prefix docs/design/prototypes/canvas-storybook run storybook`. The preview package contains the npm lockfile and separate `typecheck` and `build-storybook` commands.
@@ -89,3 +115,13 @@ The Carbon light story rendered at 1394 × 1315 and 390 × 844 on November 28, 2
 The hybrid candidate rendered on November 28, 2026. The browser checks covered the opaque white card surface, separate styles for selected and keyboard-focused nodes, container terminology, worker drill-down, pinned source, stable positions across PR #128 revisions, and focus return to the relationship, merge row, and opener. The worker scene checked automatic playback, pause and resume, pan, zoom, fit, and the 390 × 844 layout. The system reduced-motion rules were present in the loaded stylesheet. The OS preference was not emulated. At 1280 × 720 the synthetic graph showed 22 nodes and 16 relationship labels with no clipping or label collisions. The browser loaded all eight Carbon icon assets and all eleven technology logos.
 
 Human review is still needed for recognition at a glance, visual coherence between the three families, perceived loop timing, and ease of reading the larger graph.
+
+The Payments workspace candidate was exercised by keyboard in the desktop browser. The walkthrough checked scope and zoom independently, restoration of the worker selection and the container viewport, all four stable container positions across PR #128, the rationale and pinned source excerpts, Checkout uncertainty, and focus return from comparison details and Recent merges. All retry animation tracks used the same 6.2-second cycle and paused and resumed together. The sample analysis advanced the current map from `06b7dd9` to `8e24c0a` while the open #124 comparison stayed at `d2f5621`. The gap story kept `06b7dd9` visible. Storybook's 399-pixel mobile preview reached the retry excerpt without horizontal overflow. Type checking and the Storybook build passed.
+
+Visual and intended-use review remain open. Ask a developer to explain the retry change, its rationale, and what remains uncertain, then recover their earlier map. Compare the accuracy and effort with their normal GitHub handoff. Screen-reader and live reduced-motion tests remain open. The proposed Narys workspace remains deferred.
+
+The public Flask story was exercised by keyboard through the ngrok preview. The two shared card positions stayed fixed across revision switches. The evidence pane matched the selected source and revision. Closing an inspection returned focus to its relationship. The desktop cards cleared each other and the 414-pixel preview showed the source and stacked cards without horizontal overflow. Eight excerpts were checked against the pinned files. The public menu rendered the 22-node density fixture, the relocated illustration, and an archived dark story. The Payments drill-down used the shared code cards and kept its contextual retry action.
+
+The V1 journey walkthrough followed PR #128 from Recent merges through the Before and After comparison, retry source and recorded rationale. From the worker inspector it took one action to reach the excerpt directly and three through Components. Return restored the worker inspection, comparison revision, keyboard focus and container viewport. Entering from the merge inspector in Components returned to that scope and comparison. In Flask, the configuration and default actions opened their own pinned source lines. The earlier revision showed direct response construction, and the later view labeled the performance outcome unverified.
+
+At desktop map fit with the density inspector open, the gateway’s three incoming and four outgoing relationships were readable in the inspector even where map text was small. At close zoom, selecting the route to Account API brought its label and direction into view. The cross-group Partner events route to Audit worker exposed both endpoints and led to the worker’s three incoming relationships. These checks covered particular paths. Human review still needs to establish how easily unfamiliar developers can follow adjacent paths at shared ports and crossings, find decisive source, and explain the changes accurately.

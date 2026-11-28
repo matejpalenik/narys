@@ -124,6 +124,7 @@ interface GraphProps {
   direction: Direction;
   compact: boolean;
   schematic?: boolean;
+  visible?: boolean;
   panelVisible?: boolean;
   compare?: boolean;
   selected?: MapSelection;
@@ -131,9 +132,12 @@ interface GraphProps {
   onInspect: (selection: MapSelection) => void;
 }
 
-export function ArchitectureGraph({ direction, compact, schematic, panelVisible, compare, selected, revision, onInspect }: GraphProps) {
+export function ArchitectureGraph({ direction, compact, schematic, visible = true, panelVisible, compare, selected, revision, onInspect }: GraphProps) {
   const container = useRef<HTMLDivElement>(null);
   const [flow, setFlow] = useState<ReactFlowInstance<ArchitectureNode, ArchitectureEdge> | null>(null);
+  const [overviewScale, setOverviewScale] = useState(false);
+  const manualViewport = useRef(false);
+  const lastFit = useRef({ width: 0, height: 0, panelVisible });
   const wide = direction === "dark";
   const width = schematic ? 224 : compact ? 214 : wide ? 246 : 220;
   const column = schematic ? 450 : compact ? 433 : wide ? 492 : 433;
@@ -159,11 +163,18 @@ export function ArchitectureGraph({ direction, compact, schematic, panelVisible,
 
   useEffect(() => {
     const canvas = container.current;
-    if (!canvas || !flow) return;
-    const observer = new ResizeObserver(() => fit(canvas, flow));
+    if (!canvas || !flow || !visible) return;
+    const observer = new ResizeObserver(() => {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const sameSize = lastFit.current.width === width && lastFit.current.height === height;
+      if (schematic && sameSize && (manualViewport.current || lastFit.current.panelVisible === panelVisible)) return;
+      lastFit.current = { width, height, panelVisible };
+      fit(canvas, flow);
+    });
     observer.observe(canvas);
     return () => observer.disconnect();
-  }, [flow, direction, compact, schematic, panelVisible]);
+  }, [flow, direction, compact, schematic, panelVisible, visible]);
 
   const nodes: ArchitectureNode[] = (["checkout", "api", "jobs", "worker"] as const).map((id, index) => ({
     id,
@@ -202,18 +213,24 @@ export function ArchitectureGraph({ direction, compact, schematic, panelVisible,
   });
 
   return (
-    <div className="graph" ref={container} data-schematic={schematic || undefined}>
+    <div className="graph" ref={container} data-schematic={schematic || undefined} data-overview-scale={overviewScale || undefined}>
       <ReactFlow<ArchitectureNode, ArchitectureEdge>
         nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onInit={setFlow}
         minZoom={0.36} maxZoom={2} nodesDraggable={false} nodesConnectable={false}
+        onMoveEnd={(event, viewport) => {
+          if (event) manualViewport.current = true;
+          if (schematic) setOverviewScale(viewport.zoom < 0.7);
+        }}
         nodesFocusable={false} edgesFocusable={false} elementsSelectable={false}
         zoomOnDoubleClick={false} proOptions={{ hideAttribution: true }}
         aria-label="Payments architecture map"
       />
       <div className="map-tools" aria-label="Map viewport controls">
-        <Button variant="ghost" size="icon-sm" type="button" aria-label="Zoom out" title="Zoom out" onClick={() => { void flow?.zoomOut(); }}><Minus size={16} /></Button>
-        <Button variant="ghost" size="icon-sm" type="button" aria-label="Zoom in" title="Zoom in" onClick={() => { void flow?.zoomIn(); }}><Plus size={16} /></Button>
-        <Button variant="ghost" size="icon-sm" type="button" aria-label="Fit map" title="Fit map" onClick={() => { if (container.current && flow) fit(container.current, flow); }}><Focus size={16} /></Button>
+        <Button variant="ghost" size="icon-sm" type="button" aria-label="Zoom out" title="Zoom out" onClick={() => { manualViewport.current = true; void flow?.zoomOut(); }}><Minus size={16} /></Button>
+        <Button variant="ghost" size="icon-sm" type="button" aria-label="Zoom in" title="Zoom in" onClick={() => { manualViewport.current = true; void flow?.zoomIn(); }}><Plus size={16} /></Button>
+        <Button variant="ghost" size="icon-sm" type="button" aria-label="Fit map" title="Fit map" onClick={() => {
+          if (container.current && flow) { manualViewport.current = true; fit(container.current, flow); }
+        }}><Focus size={16} /></Button>
       </div>
       {schematic && (
         <div className="schematic-key" data-inspector={Boolean(panelVisible)} aria-label="Relationship key">

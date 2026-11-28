@@ -27,7 +27,7 @@ function DatabaseSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Database primitive", component: DatabaseSpecimen } satisfies Meta<typeof DatabaseSpecimen>;
+const meta = { title: "Narys/Illustrations/Database", id: "narys-database-primitive", component: DatabaseSpecimen } satisfies Meta<typeof DatabaseSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

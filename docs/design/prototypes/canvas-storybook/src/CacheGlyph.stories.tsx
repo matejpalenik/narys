@@ -30,7 +30,7 @@ function CacheSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Cache primitive", component: CacheSpecimen } satisfies Meta<typeof CacheSpecimen>;
+const meta = { title: "Narys/Illustrations/Cache", id: "narys-cache-primitive", component: CacheSpecimen } satisfies Meta<typeof CacheSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

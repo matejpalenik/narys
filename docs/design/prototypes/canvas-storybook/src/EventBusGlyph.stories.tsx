@@ -26,7 +26,7 @@ function EventBusSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Event Bus primitive", component: EventBusSpecimen } satisfies Meta<typeof EventBusSpecimen>;
+const meta = { title: "Narys/Illustrations/Event Bus", id: "narys-event-bus-primitive", component: EventBusSpecimen } satisfies Meta<typeof EventBusSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

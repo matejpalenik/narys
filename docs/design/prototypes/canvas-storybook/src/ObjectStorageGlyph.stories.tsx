@@ -32,7 +32,7 @@ function ObjectStorageSpecimen() {
   );
 }
 
-const meta = { title: "Narys/Object storage primitive", component: ObjectStorageSpecimen } satisfies Meta<typeof ObjectStorageSpecimen>;
+const meta = { title: "Narys/Illustrations/Object storage", id: "narys-object-storage-primitive", component: ObjectStorageSpecimen } satisfies Meta<typeof ObjectStorageSpecimen>;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

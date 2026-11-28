@@ -46,7 +46,7 @@ export function IllustrationPlayback({ subject, children, loop = false }: { subj
   );
 }
 
-export function RetrySchematic() {
+export function RetrySchematic({ panelVisible = true }: { panelVisible?: boolean }) {
   const arrow = useId();
   const [zoom, setZoom] = useState(1);
   const viewport = useRef<HTMLDivElement>(null);
@@ -72,7 +72,7 @@ export function RetrySchematic() {
   }
 
   return (
-    <figure className="retry-schematic" aria-label="Illustrative payment retry flow">
+    <figure className="retry-schematic" data-inspector={panelVisible} aria-label="Illustrative payment retry flow">
       <IllustrationPlayback subject="flow" loop>
         <div className="retry-workspace">
           <div ref={viewport} className="retry-viewport" data-zoomed={zoom > 1 || undefined}

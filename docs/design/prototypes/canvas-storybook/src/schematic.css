@@ -1,0 +1,774 @@
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("./assets/font/ibm-plex-sans-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+}
+
+.narys[data-schematic] {
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  --scheme-action: #0f62fe;
+  --scheme-ink: #393939;
+  --scheme-light-ink: #6f6f6f;
+  --scheme-paper: #fff;
+  --scheme-rule: #c6c6c6;
+  --scheme-quiet: #525252;
+  --scheme-tint: #edf5ff;
+  --scheme-attention: #f1c21b;
+  --productive-ease: cubic-bezier(.2, 0, .38, .9);
+  --expressive-ease: cubic-bezier(.4, .14, .3, 1);
+}
+
+.narys[data-schematic] [data-slot="button"] { transition-timing-function: var(--productive-ease); }
+.narys[data-schematic] .graph { --grid: #e0e0e0; background-size: 24px 24px; }
+.narys[data-schematic] .map-title { inset: 24px auto auto 36px; }
+.narys[data-schematic] .map-title h1 { font-weight: 530; letter-spacing: -.049em; }
+.narys[data-schematic] .map-meta { margin-top: 8px; }
+.narys[data-schematic] .map-meta code { border-color: #e0e0e0; }
+.narys[data-schematic] .inspector h2 { font-weight: 590; letter-spacing: -.034em; }
+.narys[data-schematic] .inspector-category { font: 11px var(--mono); }
+.narys[data-schematic] .inspector { border-top: 2px solid var(--scheme-rule); }
+.narys[data-schematic] .merge-id { color: var(--scheme-quiet); }
+
+.schematic-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: -6px;
+  color: var(--scheme-quiet);
+  font: 11px var(--mono);
+  pointer-events: auto;
+}
+.schematic-breadcrumb [data-slot="button"] {
+  height: 27px;
+  padding-inline: 6px;
+  color: var(--accent);
+  font: inherit;
+}
+.schematic-breadcrumb [aria-current] { padding-inline: 6px; }
+.schematic-breadcrumb svg { color: var(--scheme-light-ink); }
+
+.architecture-glyph {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  color: var(--scheme-ink);
+}
+.glyph-shell { stroke-width: 1.15; }
+.glyph-ports { stroke-width: .9; color: var(--scheme-light-ink); }
+.glyph-interior { stroke-width: .58; opacity: .78; }
+.architecture-glyph[data-detail="compact"] .glyph-interior { opacity: 0; }
+
+:is(.worker-glyph, .api-plug-glyph, .api-gateway-glyph, .cache-glyph, .compute-unit-glyph, .database-glyph, .event-bus-glyph, .object-storage-glyph, .scheduler-glyph, .web-application-glyph) > svg { display: block; width: 100%; height: auto; }
+.worker-glyph [data-part="processor"] {
+  transform-box: view-box;
+  transform-origin: 60.75px 56.75px;
+}
+.worker-glyph [data-part="activity"] { opacity: .15; visibility: hidden; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .worker-glyph[data-motion="paused"] { --worker-play-state: paused; }
+  .illustration-playback .worker-glyph[data-motion="flow"] { --worker-play-state: var(--play-state); }
+  :is(.worker-glyph[data-motion="processing"], .worker-glyph[data-motion="paused"], .illustration-playback[data-playing] .worker-glyph[data-motion="flow"]) {
+    & [data-part="processor"] {
+      animation: worker-turn 4s linear var(--worker-start-offset, 0ms) infinite var(--worker-play-state, running);
+    }
+    & [data-part="activity"] {
+      animation: worker-signal 4s ease-in-out var(--worker-start-offset, 0ms) infinite var(--worker-play-state, running);
+    }
+  }
+}
+
+/* The polygon has half-turn symmetry at the cycle boundary. */
+@keyframes worker-turn {
+  0%, 15% { transform: rotate(0deg); }
+  80%, 100% { transform: rotate(180deg); }
+}
+
+@keyframes worker-signal {
+  0% { opacity: .15; visibility: hidden; animation-timing-function: step-end; }
+  10% { opacity: .15; visibility: visible; }
+  20%, 80% { opacity: 1; visibility: visible; }
+  100% { opacity: .15; visibility: hidden; }
+}
+
+.api-plug-glyph [data-part="plug"] { --api-travel: 12.5px; }
+.api-plug-glyph [data-part="socket"] { --api-travel: -12.5px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .api-plug-glyph[data-motion="paused"] { --api-play-state: paused; }
+  .illustration-playback .api-plug-glyph[data-motion="flow"] { --api-play-state: var(--play-state); }
+  :is(.api-plug-glyph[data-motion="paused"], .illustration-playback[data-playing] .api-plug-glyph[data-motion="flow"]) {
+    & :is([data-part="plug"], [data-part="socket"]) {
+      animation: api-plug-travel 4s ease-in-out var(--api-start-offset, 0ms) infinite var(--api-play-state, running);
+    }
+    & [data-part="activity"] {
+      animation: api-contact 4s ease-in-out var(--api-start-offset, 0ms) infinite var(--api-play-state, running);
+    }
+  }
+}
+
+/* The original SVG parent rotates this local X movement onto the diagonal. */
+@keyframes api-plug-travel {
+  0%, 15%, 75%, 100% { transform: translateX(0); }
+  30%, 60% { transform: translateX(var(--api-travel)); }
+}
+
+@keyframes api-contact {
+  0%, 30%, 42%, 100% { opacity: 0; }
+  34%, 37% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .database-glyph[data-motion="flow"] [data-part="activity"] {
+    animation: narys-database-access 4s linear infinite var(--play-state, running);
+  }
+}
+
+@keyframes narys-database-access {
+  0%, 15% { opacity: 0; stroke-dashoffset: 24; }
+  20% { opacity: 1; stroke-dashoffset: 12; }
+  65% { opacity: 1; stroke-dashoffset: -88; }
+  75%, 100% { opacity: 0; stroke-dashoffset: -100; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .compute-unit-glyph[data-motion="flow"] [data-part="activity"] {
+    animation: narys-compute-cycle 4s ease-in-out infinite var(--play-state, running);
+  }
+}
+
+@keyframes narys-compute-cycle {
+  0%, 15%, 85%, 100% { opacity: .15; }
+  25%, 65% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .object-storage-glyph[data-operation="read"] [data-part="incoming-object"] {
+    animation: narys-object-storage-read 4s ease-in-out infinite var(--play-state, running);
+  }
+
+  .illustration-playback[data-playing] .object-storage-glyph[data-operation="write"] [data-part="incoming-object"] {
+    animation: narys-object-storage-write 4s ease-in-out infinite var(--play-state, running);
+  }
+}
+
+@keyframes narys-object-storage-read {
+  0%, 100% { transform: translateY(44px); opacity: 0; }
+  15%, 25% { transform: translateY(44px); opacity: 1; }
+  65%, 75% { transform: translateY(0px); opacity: 1; }
+  85% { transform: translateY(0px); opacity: 0; }
+}
+
+@keyframes narys-object-storage-write {
+  0%, 100% { transform: translateY(0px); opacity: 0; }
+  15%, 25% { transform: translateY(0px); opacity: 1; }
+  65% { transform: translateY(44px); opacity: 1; }
+  70%, 85% { transform: translateY(44px); opacity: 0; }
+}
+
+/* Show the first route as a still when playback is unavailable or reduced. */
+.api-gateway-glyph [data-part="ingress-activity"],
+.api-gateway-glyph [data-route="1"] > path { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .api-gateway-glyph[data-motion="flow"] {
+    & [data-route="2"] { --route-delay: -8s; }
+    & [data-route="3"] { --route-delay: -4s; }
+
+    & [data-part="ingress-activity"] {
+      animation: narys-endpoint-ingress 4s ease-in-out infinite var(--play-state, running);
+    }
+
+    & [data-part="route-activity"] {
+      stroke-dasharray: 100 100;
+      stroke-dashoffset: 100;
+      opacity: 0;
+      animation: narys-endpoint-route 12s linear var(--route-delay, 0s) infinite var(--play-state, running);
+    }
+
+    & [data-part="endpoint-activity"] {
+      opacity: 0;
+      animation: narys-endpoint-contact 12s ease-in-out var(--route-delay, 0s) infinite var(--play-state, running);
+    }
+  }
+}
+
+@keyframes narys-endpoint-ingress {
+  0%, 100% { opacity: 0; }
+  10%, 25% { opacity: 1; }
+  45% { opacity: 0; }
+}
+
+@keyframes narys-endpoint-route {
+  0%, 8% { opacity: 0; stroke-dashoffset: 100; }
+  8.3333% { opacity: 1; stroke-dashoffset: 100; }
+  18.3333%, 25% { opacity: 1; stroke-dashoffset: 0; }
+  28.3333%, 100% { opacity: 0; stroke-dashoffset: 0; }
+}
+
+@keyframes narys-endpoint-contact {
+  0%, 18.3333% { opacity: 0; }
+  20%, 25% { opacity: 1; }
+  28.3333%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .event-bus-glyph[data-motion="flow"] {
+    & [data-part="published-event"] {
+      animation: narys-bus-publish 4s ease-in-out infinite var(--play-state, running);
+    }
+
+    & [data-part="rail-activity"] {
+      stroke-dasharray: 100 100;
+      animation: narys-bus-rail 4s linear infinite var(--play-state, running);
+    }
+
+    & [data-part="fanout-activity"] {
+      animation: narys-bus-fanout 4s linear infinite var(--play-state, running);
+    }
+
+    & [data-part="branch"] {
+      stroke-dasharray: 100 100;
+      animation: narys-bus-branch 4s linear infinite var(--play-state, running);
+    }
+
+    & :is([data-part="fanout-arrowheads"], [data-part="delivered-events"]) {
+      animation: narys-bus-arrival 4s linear infinite var(--play-state, running);
+    }
+  }
+}
+
+@keyframes narys-bus-publish {
+  0%, 100% { opacity: 0; }
+  10%, 65% { opacity: 1; }
+  80% { opacity: 0; }
+}
+
+@keyframes narys-bus-rail {
+  0%, 12% { opacity: 0; stroke-dashoffset: 100; }
+  12.01% { opacity: 1; stroke-dashoffset: 100; }
+  32%, 65% { opacity: 1; stroke-dashoffset: 0; }
+  80%, 100% { opacity: 0; stroke-dashoffset: 0; }
+}
+
+@keyframes narys-bus-fanout {
+  0%, 34% { opacity: 0; }
+  34.01%, 65% { opacity: 1; }
+  80%, 100% { opacity: 0; }
+}
+
+@keyframes narys-bus-branch {
+  0%, 34% { stroke-dashoffset: 100; }
+  48%, 100% { stroke-dashoffset: 0; }
+}
+
+@keyframes narys-bus-arrival {
+  0%, 48% { opacity: 0; }
+  52%, 65% { opacity: 1; }
+  80%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .web-application-glyph[data-motion="flow"] {
+    & [data-part="loading"] {
+      transform-box: fill-box;
+      transform-origin: left center;
+      animation: narys-web-loading 4s linear infinite var(--play-state, running);
+    }
+
+    & [data-part="activity"] {
+      animation: narys-web-content 4s ease-in-out infinite var(--play-state, running);
+    }
+  }
+}
+
+@keyframes narys-web-loading {
+  0%, 15% { opacity: 0; transform: scaleX(0); }
+  15.01% { opacity: 1; transform: scaleX(0); }
+  40% { opacity: 1; transform: scaleX(1); }
+  50%, 100% { opacity: 0; transform: scaleX(1); }
+}
+
+@keyframes narys-web-content {
+  0%, 40% { opacity: .15; }
+  55%, 80% { opacity: 1; }
+  95%, 100% { opacity: .15; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .scheduler-glyph[data-motion="flow"] {
+    & [data-part="clock-hand"] {
+      transform-box: view-box;
+      transform-origin: 60.75px 56.75px;
+      animation: narys-scheduler-hand 4s linear infinite var(--play-state, running);
+    }
+
+    & [data-part="trigger"] {
+      animation: narys-scheduler-trigger 4s ease-in-out infinite var(--play-state, running);
+    }
+  }
+}
+
+@keyframes narys-scheduler-hand {
+  0%, 10% { transform: rotate(0deg); }
+  65%, 100% { transform: rotate(360deg); }
+}
+
+@keyframes narys-scheduler-trigger {
+  0%, 65%, 90%, 100% { opacity: 0; }
+  70%, 80% { opacity: 1; }
+}
+
+.cache-glyph :is([data-operation="miss"], [data-operation="write"]) [data-part="activity"] { opacity: .25; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration-playback[data-playing] .cache-glyph {
+    & [data-operation="hit"] [data-part="cache-hit"] {
+      animation: narys-cache-hit-block 4s ease-in-out infinite var(--play-state, running);
+    }
+    & [data-operation="hit"] [data-part="activity"] {
+      animation: narys-cache-hit-bolt 4s ease-in-out infinite var(--play-state, running);
+    }
+    & [data-operation="miss"] [data-part="scan-1"] {
+      animation: narys-cache-miss-scan1 4s linear infinite var(--play-state, running);
+    }
+    & [data-operation="miss"] [data-part="scan-2"] {
+      animation: narys-cache-miss-scan2 4s linear infinite var(--play-state, running);
+    }
+    & [data-operation="miss"] [data-part="scan-3"] {
+      animation: narys-cache-miss-scan3 4s linear infinite var(--play-state, running);
+    }
+    & [data-operation="miss"] [data-part="miss-marker"] {
+      animation: narys-cache-miss-marker 4s ease-in-out infinite var(--play-state, running);
+    }
+    & [data-operation="write"] [data-part="write-packet"] {
+      animation: narys-cache-write-packet 4s ease-in-out infinite var(--play-state, running);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cache-glyph [data-operation="hit"] [data-part="cache-hit"],
+  .cache-glyph [data-operation="miss"] [data-part="miss-marker"] { opacity: 1; }
+
+  .cache-glyph [data-operation="write"] [data-part="write-packet"] {
+    opacity: 1;
+    transform: translateY(32px);
+  }
+}
+
+@keyframes narys-cache-hit-block {
+  0%, 15% { opacity: 0; }
+  25%, 45% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+@keyframes narys-cache-hit-bolt {
+  0%, 40% { opacity: .25; }
+  55%, 75% { opacity: 1; }
+  90%, 100% { opacity: .25; }
+}
+
+@keyframes narys-cache-miss-scan1 {
+  0%, 10%, 25%, 100% { opacity: 0; }
+  14%, 21% { opacity: 1; }
+}
+
+@keyframes narys-cache-miss-scan2 {
+  0%, 25%, 40%, 100% { opacity: 0; }
+  29%, 36% { opacity: 1; }
+}
+
+@keyframes narys-cache-miss-scan3 {
+  0%, 40%, 55%, 100% { opacity: 0; }
+  44%, 51% { opacity: 1; }
+}
+
+@keyframes narys-cache-miss-marker {
+  0%, 55%, 90%, 100% { opacity: 0; }
+  62%, 78% { opacity: 1; }
+}
+
+@keyframes narys-cache-write-packet {
+  0%, 10% { opacity: 0; transform: translateY(0px); }
+  20%, 25% { opacity: 1; transform: translateY(0px); }
+  50%, 75% { opacity: 1; transform: translateY(32px); }
+  85% { opacity: 0; transform: translateY(32px); }
+  100% { opacity: 0; transform: translateY(0px); }
+}
+
+/* Pad the card, rather than the graph node, so ports land on its visible border. */
+.schematic-node { position: relative; min-height: 104px; }
+.narys .schematic-node-button, .specimen-node {
+  display: block;
+  width: 100%;
+  min-height: 104px;
+  padding: 13px 13px 11px;
+  border: 1px solid var(--scheme-rule);
+  background: var(--scheme-paper);
+  text-align: left;
+  pointer-events: auto;
+}
+.narys .schematic-node-button:hover { border-color: var(--scheme-light-ink); }
+.schematic-node[data-selected] .schematic-node-button, .specimen-node[data-selected="true"] { border-color: var(--scheme-action); }
+.narys .schematic-node-button:focus-visible, .narys .specimen-node:focus-visible {
+  outline: 2px dashed var(--text);
+  outline-offset: 3px;
+}
+.architecture-node-face { display: grid; gap: 9px; min-width: 0; }
+.architecture-node-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.architecture-node-identity {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e0e0e0;
+  background: #f4f4f4;
+}
+.architecture-node-identity .architecture-glyph { width: 38px; }
+.architecture-node-identity .glyph-shell { stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.architecture-node-identity .glyph-ports { stroke-width: .7px; vector-effect: non-scaling-stroke; }
+.architecture-node-identity .semantic-icon { width: 27px; height: 27px; }
+.semantic-icon { display: block; object-fit: contain; }
+.architecture-node-heading-text { display: grid; min-width: 0; gap: 2px; line-height: 1.18; }
+.architecture-node-heading-text strong { font-size: 15px; font-weight: 600; }
+.architecture-node-heading-text small { color: var(--scheme-quiet); font-size: 12px; }
+.architecture-node-detail { display: grid; gap: 5px; border-top: 1px solid #e0e0e0; padding-top: 8px; }
+.architecture-node-element { color: var(--scheme-quiet); font: 10px var(--mono); }
+.architecture-node-states { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.architecture-node-technology { display: grid; align-items: start; gap: 4px; color: var(--scheme-quiet); }
+.technology-mark { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--scheme-quiet); }
+.technology-mark img { display: block; object-fit: contain; }
+.architecture-node-face[data-variant="detailed"][data-family="technical"] .architecture-node-identity {
+  flex-basis: 65px; width: 65px; height: 45px;
+}
+.architecture-node-face[data-variant="detailed"][data-family="technical"] .architecture-glyph { width: 58px; }
+.architecture-inspection { padding: 12px; border: 1px solid var(--scheme-rule); background: var(--scheme-paper); }
+.schematic-port {
+  position: absolute;
+  z-index: 1;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--scheme-light-ink);
+  border-radius: 50%;
+  background: var(--scheme-paper);
+  pointer-events: none;
+}
+.schematic-port[data-port="left"] { top: 50%; left: 0; transform: translate(-50%, -50%); }
+.schematic-port[data-port="right"] { top: 50%; right: 0; transform: translate(50%, -50%); }
+.schematic-port[data-port="top"] { top: 0; left: 50%; transform: translate(-50%, -50%); }
+.schematic-port[data-port="bottom"] { bottom: 0; left: 50%; transform: translate(-50%, 50%); }
+
+.schematic-mark, .schematic-confidence {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 4px;
+  border: 1px solid var(--scheme-rule);
+  color: var(--scheme-quiet);
+  background: var(--scheme-paper);
+  font: 9px/1.4 var(--mono);
+  white-space: nowrap;
+}
+.schematic-mark[data-change="added"] { color: var(--accent); border-style: solid; border-color: var(--scheme-action); }
+.schematic-mark[data-change="modified"] { color: var(--accent); border-left: 2px solid var(--scheme-action); }
+.schematic-mark[data-change="removed"] { border-style: dashed; text-decoration: line-through; }
+.schematic-confidence[data-confidence="supported"] { font-weight: 600; border-color: transparent; color: var(--accent); }
+.schematic-confidence[data-confidence="unconfirmed"] { border-color: transparent; }
+.schematic-confidence[data-confidence="unconfirmed"] svg { border-radius: 50%; background: var(--scheme-attention); color: var(--text); }
+
+.schematic-connection { stroke: var(--edge); stroke-width: 1.4; }
+.schematic-connection[data-kind="async"] { stroke-dasharray: 5 4; }
+.schematic-connection[data-kind="event"] { stroke-dasharray: 9 4 2 4; }
+.schematic-connection[data-kind="data"] { stroke-dasharray: 12 4; stroke-width: 2.1; }
+.schematic-connection[data-kind="unknown"] { stroke-dasharray: 1 4; stroke-linecap: round; stroke-width: 1.8; }
+.schematic-connection[data-change="modified"], .schematic-connection[data-change="added"] { stroke: var(--scheme-action); stroke-width: 2; }
+.schematic-connection[data-change="removed"] { stroke: var(--scheme-light-ink); stroke-dasharray: 4 5; }
+.schematic-connection-selected { stroke: var(--accent); stroke-width: 2.5; }
+.narys[data-schematic] .edge-button { background: var(--scheme-paper); font-size: 10px; min-height: 23px; }
+.narys[data-schematic] .edge-button[data-active="true"] { background: var(--scheme-tint); }
+.narys[data-schematic] .edge-button[data-selected] { outline: 1px solid var(--scheme-action); outline-offset: 2px; }
+.narys[data-schematic] .edge-button .schematic-mark { padding: 0 3px; }
+.schematic-key {
+  position: absolute;
+  z-index: 2;
+  inset: auto auto 28px 151px;
+  display: flex;
+  gap: 14px;
+  padding: 4px 8px;
+  color: var(--scheme-quiet);
+  background: var(--canvas);
+  font: 10px var(--mono);
+  pointer-events: none;
+}
+.schematic-key span { display: flex; align-items: center; gap: 6px; }
+.schematic-key .connection-sample { width: 36px; }
+.schematic-key .schematic-connection { vector-effect: non-scaling-stroke; stroke-width: 1.2; }
+
+.system-context, .retry-schematic {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 128px 36px 55px;
+  background: radial-gradient(circle, var(--grid) .7px, transparent 1px) center / 22px 22px;
+  animation: schematic-enter 150ms var(--productive-ease) both;
+}
+.system-context[data-inspector="true"], .retry-schematic { padding-right: calc(var(--inspector-width) + 42px); }
+.narys .context-system {
+  display: grid;
+  justify-items: center;
+  white-space: normal;
+  gap: 10px;
+  width: min(100%, 360px);
+  height: auto;
+  padding: 16px 24px 28px;
+  border: 1px dashed var(--scheme-light-ink);
+  background: var(--scheme-paper);
+}
+.narys .context-system:hover { border-color: var(--scheme-action); background: var(--scheme-tint); }
+.context-system .architecture-glyph { width: min(100%, 235px); }
+.context-system strong { font-size: 22px; }
+.context-system span { display: flex; align-items: center; gap: 8px; color: var(--accent); font: 11px var(--mono); }
+
+.illustration-playback { --play-state: running; min-width: 0; }
+.illustration-playback[data-paused] { --play-state: paused; }
+.illustration-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 18px;
+  color: var(--scheme-quiet);
+  font: 11px var(--mono);
+}
+.illustration-controls [data-slot="button"] { min-height: 34px; }
+
+.retry-schematic {
+  place-items: stretch;
+  padding-top: 140px;
+  padding-bottom: 22px;
+}
+.retry-schematic .illustration-playback {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-height: 0;
+}
+.retry-workspace { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; }
+.retry-viewport { container-type: size; min-width: 0; min-height: 0; overflow: auto; }
+.retry-viewport[data-zoomed] { cursor: grab; }
+.retry-viewport[data-zoomed]:active { cursor: grabbing; user-select: none; }
+.retry-viewport:focus-visible { outline: 2px dashed var(--text); outline-offset: -2px; }
+.retry-plane { width: calc(100cqw * var(--retry-zoom)); height: calc(100cqh * var(--retry-zoom)); }
+.retry-trace {
+  position: relative;
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  width: 100cqw;
+  height: 100cqh;
+  transform: scale(var(--retry-zoom));
+  transform-origin: top left;
+}
+.retry-viewport-tools { display: flex; justify-self: start; padding: 2px; border: 1px solid var(--scheme-rule); background: var(--scheme-paper); }
+.narys .retry-viewport-tools button { width: 33px; height: 31px; color: var(--scheme-quiet); }
+.narys .retry-viewport-tools button:disabled { opacity: .42; }
+.retry-stages {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18px, .37fr) minmax(0, 1.26fr) minmax(18px, .37fr) minmax(0, 1fr);
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.retry-stage {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: clamp(168px, 29vh, 255px);
+  gap: 7px;
+  padding: 10px 5px;
+  border: 1px solid var(--scheme-rule);
+  background: var(--scheme-paper);
+  text-align: center;
+}
+.retry-stage .architecture-glyph { width: min(87%, 235px); }
+.retry-stage strong { font-weight: 630; line-height: 1.18; }
+.retry-stage :is(small, code) { color: var(--scheme-quiet); font: 11px var(--mono); overflow-wrap: anywhere; }
+.retry-worker { border: 1px dashed var(--scheme-light-ink); min-height: clamp(185px, 34vh, 300px); }
+.retry-boundary-label {
+  position: absolute;
+  inset: -8px 0 auto;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-inline: 4px;
+  background: var(--scheme-paper);
+  color: var(--scheme-quiet);
+  font: 10px var(--mono);
+}
+.retry-channel { position: relative; align-self: center; }
+.retry-channel-label { position: absolute; inset: auto 0 100%; text-align: center; font: 10px var(--mono); color: var(--scheme-quiet); }
+.retry-channel svg { display: block; width: 100%; height: 20px; overflow: visible; }
+.retry-channel .schematic-connection { stroke: var(--accent); vector-effect: non-scaling-stroke; }
+.retry-summary { color: var(--scheme-quiet); font-size: 13px; }
+.trace-pulse {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--scheme-action);
+  opacity: 0;
+  pointer-events: none;
+}
+.trace-pulse { top: calc(50% - 4px); left: 0; box-shadow: 0 0 0 2px white; }
+.retry-schematic .illustration-playback { --flow-duration: 6200ms; }
+[data-playing] .message-queue-glyph[data-animated] .message-slot {
+  animation: queue-slot-passage var(--flow-duration) step-end var(--queue-slot-delay, 0ms) infinite var(--play-state);
+}
+/* Each slot holds its fill for 4% of the shared retry loop. */
+.message-queue-glyph .message-slot:nth-child(2) { --queue-slot-delay: calc(var(--flow-duration) * .04); }
+.message-queue-glyph .message-slot:nth-child(3) { --queue-slot-delay: calc(var(--flow-duration) * .08); }
+[data-playing] .trace-pulse[data-leg="inbound"] { animation: retry-inbound var(--flow-duration) linear infinite var(--play-state); }
+[data-playing] .trace-pulse[data-leg="outbound"] { animation: retry-outbound var(--flow-duration) linear infinite var(--play-state); }
+@keyframes queue-slot-passage {
+  0%, 6%, 100% { fill: #ffffff; }
+  2% { fill: var(--scheme-action); }
+}
+@keyframes retry-inbound {
+  0%, 14% { opacity: 0; left: 0; }
+  16% { opacity: 1; }
+  33% { opacity: 1; left: calc(100% - 8px); }
+  36%, 100% { opacity: 0; left: calc(100% - 8px); }
+}
+@keyframes retry-outbound {
+  0%, 52% { opacity: 0; left: 0; }
+  55% { opacity: 1; }
+  72% { opacity: 1; left: calc(100% - 8px); }
+  75%, 100% { opacity: 0; left: calc(100% - 8px); }
+}
+@keyframes illustration-complete { from { opacity: 0; } to { opacity: 0; } }
+@keyframes schematic-enter { from { opacity: .55; } to { opacity: 1; } }
+
+.narys.specimen { height: auto; min-height: 100dvh; overflow: visible; }
+.specimen-sheet { width: min(100%, 1350px); margin: 0 auto; padding: 42px clamp(16px, 4vw, 60px) 60px; }
+.specimen-title { padding-bottom: 27px; }
+.specimen-title h1 { font-size: clamp(31px, 4vw, 48px); font-weight: 530; line-height: 1.12; letter-spacing: -.045em; }
+.specimen-title p, .specimen section > p { color: var(--scheme-quiet); margin-top: 8px; }
+.specimen-title a { display: inline-block; margin-top: 12px; color: var(--accent); text-underline-offset: 3px; }
+.specimen section { margin-bottom: 25px; }
+.motion-primitive-example { display: flex; flex-direction: column; }
+.motion-primitive-example .architecture-glyph { width: min(100%, 230px); margin: 16px auto; }
+.motion-primitive-example .illustration-playback { display: grid; }
+.motion-primitive-example .illustration-controls { order: 1; }
+.worker-primitive-examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(235px, 100%), 1fr)); gap: 12px; }
+.worker-primitive-example { padding: 16px; border: 1px solid var(--scheme-rule); background: var(--scheme-paper); }
+.worker-primitive-art { display: grid; justify-items: center; margin-block: 16px; }
+.worker-primitive-art .worker-glyph { width: min(100%, 230px); }
+.worker-primitive-example output { color: var(--scheme-quiet); font: 12px var(--mono); }
+.worker-primitive-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.specimen section h2 { margin-bottom: 10px; font-size: 18px; font-weight: 620; }
+.specimen figure { margin: 0; }
+.specimen-connections, .specimen-states, .specimen-change { display: grid; gap: 1px; background: var(--scheme-rule); border: 1px solid var(--scheme-rule); }
+.specimen-connections { grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); }
+.specimen-states { grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr)); }
+.specimen figure { padding: 12px; background: var(--scheme-paper); min-width: 0; }
+.specimen-families { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, .85fr) minmax(0, 1.3fr); gap: 12px; }
+.specimen-family { min-width: 0; padding: 16px; border: 1px solid var(--scheme-rule); background: var(--scheme-paper); }
+.specimen-family h3, .specimen-node-variants h3 { font-size: 14px; font-weight: 600; }
+.specimen-family p { margin-block: 4px 14px; color: var(--scheme-quiet); font-size: 12px; }
+.specimen-icon-set, .specimen-logo-set, .specimen-infrastructure { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; }
+.specimen-icon-set figure { display: grid; justify-items: start; gap: 5px; padding: 7px; border: 1px solid #e0e0e0; }
+.specimen-icon-set figcaption, .specimen-infrastructure figcaption { font-size: 12px; }
+.specimen-logo-set > .technology-mark { min-height: 34px; padding: 6px; border: 1px solid #e0e0e0; }
+.specimen-logo-set img { width: 20px; height: 20px; }
+.specimen-infrastructure figure { padding: 6px; border: 1px solid #e0e0e0; }
+.specimen-glyph-pair { display: grid; grid-template-columns: .8fr 1fr; gap: 8px; align-items: end; margin: 8px 0 1px; }
+.specimen-glyph-pair > div { display: grid; justify-items: center; gap: 4px; }
+.specimen-glyph-pair span { font: 9px var(--mono); color: var(--scheme-quiet); }
+.specimen-node-variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(224px, 100%), 1fr)); align-items: start; gap: 12px; }
+.specimen-node-variants h3 { margin-bottom: 6px; }
+.specimen-node-variants .specimen-node { max-width: 280px; }
+.specimen-node { position: relative; }
+.connection-sample { display: block; width: min(100%, 190px); overflow: visible; }
+.specimen-connections figcaption { color: var(--scheme-quiet); font-size: 12px; }
+.specimen-state { min-height: 105px; }
+.specimen-state .architecture-glyph, .specimen-change .architecture-glyph { width: min(113px, 100%); }
+.specimen-state[data-change="added"] { border-top: 2px solid var(--scheme-action); }
+.specimen-state[data-change="modified"] { border-left: 2px solid var(--scheme-action); }
+.specimen-state[data-change="removed"] { outline: 1px dashed var(--scheme-light-ink); outline-offset: -4px; }
+.specimen-state[data-change="removed"] .semantic-icon { opacity: .5; }
+.specimen-state .semantic-icon { margin-bottom: 7px; }
+.specimen .illustration-controls { padding-block: 10px; }
+.specimen-change { position: relative; grid-template-columns: repeat(3,minmax(0,1fr)); }
+.specimen-change figure { position: relative; display: grid; align-content: space-between; min-height: 100px; }
+.specimen-change .specimen-removal .connection-sample { margin-top: 18px; }
+.specimen-motion-clock, .specimen-outgoing { position: absolute; opacity: 0; pointer-events: none; }
+.specimen-outgoing { inset: 43px 19px auto; border-top: 1px solid var(--edge); }
+[data-playing] .specimen-motion-clock { animation: illustration-complete 1500ms linear both var(--play-state); visibility: hidden; }
+[data-playing] [data-draw] .glyph-shell,
+[data-playing] .event-bus-glyph[data-draw] [data-part="enclosure"] > path:first-child {
+  animation: draw-shell 650ms var(--expressive-ease) both var(--play-state);
+}
+[data-playing] .specimen-outgoing { animation: outgoing-relationship 560ms var(--productive-ease) .15s both var(--play-state); }
+[data-playing] .specimen-propagation .api-gateway-glyph [data-part="enclosure"] > path:first-child {
+  animation: affected-component 550ms var(--expressive-ease) .65s both var(--play-state);
+}
+@keyframes draw-shell { from { stroke-dasharray: 1; stroke-dashoffset: 1; } to { stroke-dasharray: 1; stroke-dashoffset: 0; } }
+@keyframes outgoing-relationship { from { opacity: 1; } to { opacity: 0; } }
+@keyframes affected-component { 50% { stroke: var(--scheme-action); stroke-width: 2; } }
+
+.density-fixture {
+  height: clamp(560px, 76vh, 680px);
+  margin-block: 12px;
+  border: 1px solid var(--scheme-rule);
+  background: radial-gradient(circle, #dedede .7px, transparent 1px) center / 22px 22px;
+}
+.density-fixture .react-flow { background: transparent; }
+.density-fixture .specimen-node { cursor: default; }
+.density-label {
+  position: absolute;
+  padding: 3px 5px;
+  border: 1px solid var(--scheme-rule);
+  background: var(--scheme-paper);
+  color: var(--scheme-quiet);
+  font: 11px var(--mono);
+  white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+  .specimen-families { grid-template-columns: 1fr; }
+  .narys[data-schematic] .map-title { inset: 15px auto auto 18px; }
+  .system-context[data-inspector] { place-items: start center; padding: 113px 15px 18px; }
+  .retry-schematic { inset-block-end: 49%; padding: 112px 15px 6px; overflow-y: auto; }
+  .retry-workspace { min-height: 175px; }
+  .context-system { align-self: start; }
+  .retry-trace { gap: 7px; padding-top: 6px; }
+  .retry-stage { min-height: 103px; gap: 4px; }
+  .retry-worker { min-height: 116px; }
+  .schematic-key { inset: auto auto 20px 15px; }
+  .schematic-key[data-inspector="true"] { display: none; }
+}
+@media (max-width: 490px) {
+  .retry-stage strong { font-size: 11px; }
+  .retry-stage :is(small, code) { font-size: 9px; }
+  .retry-boundary-label { font-size: 8px; }
+  .retry-channel-label { display: none; }
+  .retry-summary { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .narys[data-schematic] :is(.system-context, .retry-schematic) { animation: none; }
+  .illustration-playback[data-playing] :is(.trace-pulse, .specimen-motion-clock, .specimen-outgoing, .glyph-shell),
+  [data-playing] .message-queue-glyph[data-animated] .message-slot { animation: none; }
+}

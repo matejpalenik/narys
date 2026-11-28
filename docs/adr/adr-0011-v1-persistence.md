@@ -1,0 +1,59 @@
+---
+title: "ADR-0011: Shared persistence for the self-hosted pilot"
+status: "Accepted"
+date: "2026-11-27"
+authors: "Product owner and architecture design assistant"
+tags: ["architecture", "decision"]
+supersedes: ""
+superseded_by: ""
+---
+
+# ADR-0011: Shared persistence for the self-hosted pilot
+
+## Status
+
+**Accepted** on November 27, 2026. The product owner chose SQLite for V1 and left future database choices open.
+
+## Context
+
+Apply this persistence decision to automatically published map revisions under [ADR-0018](adr-0018-automated-map-publication.md). The first map, its evidence, and later observations use the same ownership and recovery boundary.
+
+The pilot team runs a Next.js web process and one analysis worker on the same Compose host. Narys owns the confirmed map. It records webhook work before acknowledging it and must recover pending work after restart. Compare installation effort, read and write concurrency, atomic publication, and the effort to back up and restore the workspace. [Runtime](adr-0010-v1-application-runtime.md) · [Map ownership](adr-0004-confirmed-map-ownership.md) · [Merge detection](adr-0005-merge-detection.md)
+
+SQLite can share a file among processes on one host. In write-ahead logging mode, readers can continue while a writer holds a transaction. Writers take turns. The online backup API creates a consistent copy. Docker volumes preserve data across container replacement. [SQLite concurrency guidance](https://sqlite.org/whentouse.html) · [Write-ahead logging](https://sqlite.org/wal.html) · [SQLite backup API](https://sqlite.org/backup.html) · [Docker volumes](https://docs.docker.com/engine/storage/volumes/)
+
+A disposable exercise with two local Node.js processes used SQLite 3.53.4. A reader saw the last committed map while the worker held a write transaction. A competing write was blocked and succeeded after the worker committed. A backup taken during the transaction was opened as a restored file. It held a consistent map and the pending work from the prior committed state. The Compose volume and pilot workload remain to be tested.
+
+## Decision
+
+Use one SQLite database on a local persistent volume shared by the web process and analysis worker. Store the confirmed map, revision-linked observations, and durable webhook and processing records together. Keep SQLite-specific access in the persistence adapter. Use short transactions to record accepted work and to publish a map update with its processing record. Perform remote calls and model inference outside the write transaction.
+
+Use SQLite's supported backup mechanism. Restore the database before resuming the application and reconcile subsequent merges from GitHub. Evaluate local write contention and recovery for the Compose deployment. Driver, schema, migration mechanics, and operational thresholds remain to be designed.
+
+## Consequences
+
+### Positive
+
+- **POS-001** The pilot has a single persistent volume for the application's state and queue. The team has one backup and restore procedure for both.
+- **POS-002** A transaction can commit a map revision and the corresponding work state together. Readers can see the previous committed revision while the worker publishes the next one.
+
+### Negative
+
+- **NEG-001** SQLite serializes writes. Long transactions can delay acceptance of webhooks and maintainer corrections. Measure contention and use short transactions with bounded retries.
+- **NEG-002** The deployment relies on a shared host-local filesystem. A later requirement for multi-host writes or higher sustained write concurrency would justify reconsidering the store.
+
+## Alternatives Considered
+
+### PostgreSQL from the start
+
+- **ALT-001** PostgreSQL provides network access to a shared database and more flexibility for concurrent writers. The team would also operate a database service and its credentials, updates, backups, and recovery. The pilot's single host and one worker give us a smaller design to evaluate first. [PostgreSQL concurrency](https://www.postgresql.org/docs/current/mvcc-intro.html)
+
+## Implementation Notes
+
+- **IMP-001** Run Compose with both application processes using the local volume. Exercise a webhook and maintainer correction while the worker publishes a revision. Measure delays and verify that acknowledgement follows durable acceptance.
+- **IMP-002** Back up and restore the confirmed map, revision references, and pending work. Verify recovery through a container replacement and a replay of merges since the backup.
+
+## References
+
+- **REF-001** [Container view](../../ARCHITECTURE.md#4-containers-c4-l2)
+- **REF-002** [Runtime, deployment, and recovery](../../ARCHITECTURE.md#6-runtime-deployment-and-recovery)

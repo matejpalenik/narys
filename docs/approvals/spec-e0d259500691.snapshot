@@ -1,0 +1,112 @@
+# Narys V1 specification
+
+Status: Draft for product owner review. Conformance cases describe planned checks.
+
+Scope: One selected area of one existing GitHub repository per pilot. An operator can opt in to public read-only access for a workspace backed by a public GitHub repository. The Narys launch uses that setting.
+
+The V1 map supports automatic analysis and evidence inspection. Manual map corrections are deferred. [V1 map scope](docs/requirements/v1-automated-map.md#deferred-scope)
+
+Approval: Pending joint review of the specification and engineering baseline.
+
+## 1. Purpose and sources
+
+Narys lets engineers understand architectural changes as they merge. Once a maintainer configures the workspace, Narys generates the starting map and publishes changes automatically. The workspace ties claims to the underlying code and available rationale, with deployment recorded separately. [V1 release scope](docs/requirements/product.md#8-release-scope) · [Automated map requirement](docs/requirements/v1-automated-map.md)
+
+| Input | Reviewed SHA-256 |
+|---|---|
+| [Initial product requirements, REQ-001 through REQ-004](docs/requirements/product.md) | `a3c5bc0390d1b5db93db98aa50c803d118f62874f0d10ffaf40ab12d0aa8c171` |
+| [Merge coverage amendment](docs/requirements/v1-merge-coverage.md) | `963c33b9b928e5b67f096b8cd5aedb9a83ff79d80247cb8adf82e486d59be64e` |
+| [Automated map amendment to REQ-004](docs/requirements/v1-automated-map.md) | `c3610ad9570e97ea8594b80dc99815aab835e022a916790d63c39539f4a203fc` |
+| [Workspace publication requirement, REQ-005](docs/requirements/v1-public-narys-demo.md) | `3053a3454da40e0a4d0ae851ab1b44f6d67babb00728a8e3b7a226bfa33dba11` |
+| [Original architecture approved for specification](docs/approvals/architecture-34d1bf2b2481.snapshot) | `34d1bf2b2481f64b1bf33c80bd20b5d707c79ac2e7a62ca78fbde3fef7f890c9` |
+| [Original approved experience, UX-001 through UX-005](EXPERIENCE.md) | `70c20b8da933bdc2e318b7633edfc91f233ba543894c302da0ae186708f5a676` |
+
+The current [architecture](ARCHITECTURE.md) applies ADR-0017 and ADR-0018. The current [setup experience](EXPERIENCE.md#14-automated-map-setup) applies the automated map amendment.
+
+Interpret the uppercase terms `MUST` and `MUST NOT` according to BCP 14. [RFC 2119](https://www.rfc-editor.org/info/rfc2119/) · [RFC 8174](https://www.rfc-editor.org/info/rfc8174/)
+
+## 2. Domain terms
+
+| Concept | Meaning and identity |
+|---|---|
+| Area | The part of the connected repository selected for analysis. Directly relevant relationships can cross the initial path. |
+| Starting map | The first repository-derived map for an area, tied to a specific commit and its evidence. |
+| Displayed map | The starting map or a later map shaped by source-backed observations. Its revision identifies the code it describes. |
+| Integration comparison | The two repository commits that bound a source change. A comparison belongs to a PR only when repository evidence establishes the association. |
+| Architecture observation | An account of a component, responsibility, interface, relationship, or flow at a stated revision. Its confidence depends on the available evidence. |
+| Deployment observation | Evidence that a revision containing the change reached an identified environment. |
+
+## 3. Observable behavior
+
+| ID | Obligation | Source | Check |
+|---|---|---|---|
+| SPEC-001 | Narys MUST generate a starting map for the selected file, folder, or described area at an identified commit, with source references for components and relationships. It MUST keep competing area interpretations distinguishable when the description is ambiguous. | REQ-004, UX-008, [ADR-0007](docs/adr/adr-0007-starting-map-scope.md) | CONF-001 |
+| SPEC-004 | For protected workspace requests, Narys MUST check the current permissions at the server. Eligible signed-in viewers and maintainers can inspect the workspace. Setup through the workspace requires an eligible signed-in maintainer. | REQ-004, REQ-005, [ADR-0013](docs/adr/adr-0013-workspace-access.md), [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) | CONF-002 |
+| SPEC-005 | Narys MUST accept qualifying merge and branch-update deliveries for the configured installation, repository, and tracked branch only after signature validation. It MUST persist the accepted event before acknowledging it. | REQ-001, [ADR-0005](docs/adr/adr-0005-merge-detection.md), [ADR-0009](docs/adr/adr-0009-merged-revision-attribution.md), [ADR-0012](docs/adr/adr-0012-github-repository-access.md) | CONF-003 |
+| SPEC-006 | For an architecture-changing merge affecting the selected area, Narys MUST publish the supported map changes and affected behavior in the workspace independently of authorship or deployment. Recent merges MUST present qualifying changes from people and agents. Standalone behavior changes are outside this view. | REQ-001, UX-001, [coverage amendment](docs/requirements/v1-merge-coverage.md) | CONF-004, CONF-005 |
+| SPEC-007 | For an attributed PR comparison, Narys MUST identify the revisions immediately before and after that integration. Where the branch comparison is supported and the individual PR is uncertain, Narys MUST show the supported map change with its branch revisions and label PR attribution unconfirmed. | REQ-001, [ADR-0009](docs/adr/adr-0009-merged-revision-attribution.md) | CONF-004 |
+| SPEC-008 | Narys MUST check concrete change claims in available PR and commit context against revision-pinned source. It MUST show conflicting claims with their source evidence as possible divergence and mark claims with insufficient evidence as unconfirmed. A match applies to the source correspondence checked. Claimed performance goals appear as attributed rationale when recorded. | REQ-001, UX-005, [ADR-0008](docs/adr/adr-0008-map-update-evidence.md) | CONF-005 |
+| SPEC-009 | If evidence is incomplete for part of a change, Narys MUST publish the supported part and identify the unconfirmed behavior on the affected map element at the displayed revision. | REQ-001, UX-005 | CONF-005 |
+| SPEC-010 | For a displayed change, Narys MUST show the recorded rationale with its source, or mark rationale missing when the available records provide none. | REQ-002, UX-001 | CONF-006 |
+| SPEC-011 | Narys MUST show merge and deployment as separately identifiable observations. Deployment confirmation requires evidence for a revision containing the change and an identified environment. Without that evidence, the deployment state is unconfirmed. | REQ-003, UX-001 | CONF-006 |
+| SPEC-012 | Retried, delayed, or duplicate deliveries and reconciliation MUST converge on one published effect for the same integration. After interruption, Narys MUST preserve the last published map and its revision until a supported update is ready. It MUST recover missed merges available from GitHub history. | REQ-001, [ADR-0005](docs/adr/adr-0005-merge-detection.md), [ADR-0011](docs/adr/adr-0011-v1-persistence.md) | CONF-008 |
+| SPEC-013 | From the canvas, an engineer MUST be able to inspect recent merges, compare revisions in context, and open the associated evidence using the keyboard. Closing details MUST return focus to the selected merge. Closing the merge panel MUST return focus to its opener. | REQ-001, REQ-002, UX-003, [WCAG keyboard](https://www.w3.org/TR/WCAG22/#keyboard) | CONF-007 |
+| SPEC-014 | An anonymous visitor MUST be able to inspect the map, recent merges, revision comparisons, and eligible evidence in a published workspace. On every public read, Narys MUST return only content authorized for public access and supported by eligible evidence. This applies to pages and direct requests for workspace data. | REQ-005, [ADR-0017](docs/adr/adr-0017-workspace-publication.md) | CONF-009 |
+| SPEC-015 | After the operator withdraws publication or Narys learns that the repository is no longer public, Narys MUST withhold workspace data on subsequent anonymous requests. When public verification is due and GitHub cannot establish eligibility, Narys MUST pause anonymous reads and show temporary unavailability. Guest responses MUST require a fresh authorization decision for reuse. | REQ-005, [UX-010](EXPERIENCE.md#16-published-workspace-unavailable), [ADR-0017](docs/adr/adr-0017-workspace-publication.md) | CONF-010 |
+| SPEC-016 | Narys MUST send analysis evidence only to the operator-configured destination. A failed request assigned to local inference MUST keep that routing boundary. | [ADR-0002](docs/adr/adr-0002-repository-data-boundary.md), [ADR-0016](docs/adr/adr-0016-pilot-gateway-product.md) | CONF-011 |
+| SPEC-017 | A new workspace MUST be private by default. An operator MUST be able to enable publication for a workspace backed by a public GitHub repository. Only an explicitly published workspace backed by a public GitHub repository is eligible for anonymous reads. | REQ-005, [ADR-0017](docs/adr/adr-0017-workspace-publication.md) | CONF-012 |
+| SPEC-018 | While analysis of an accepted merge is queued or running, Narys MUST show a progress status alongside the revision the displayed map describes. The status MUST be available to assistive technology without moving keyboard focus. When the work completes, the status MUST reflect any remaining analysis. Public status is subject to SPEC-014. | REQ-001, [UX-007](EXPERIENCE.md#13-merge-progress-on-the-canvas) | CONF-013 |
+| SPEC-019 | An open workspace MUST reflect merge progress and published architecture results without requiring a manual reload. An open PR comparison MUST keep its selected merge and revisions during these updates. | REQ-001, UX-003, [UX-007](EXPERIENCE.md#13-merge-progress-on-the-canvas) | CONF-013 |
+| SPEC-020 | Once an area is configured, Narys MUST publish the evidence-backed starting map automatically. It MUST publish subsequent supported observations independently of user sessions or maintainer confirmation. Starting and subsequent maps MUST identify material gaps as unconfirmed at the revision checked. | REQ-004, REQ-001, [UX-008](EXPERIENCE.md#14-automated-map-setup), [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) | CONF-001, CONF-008 |
+| SPEC-021 | Narys MUST preserve each published map revision with the source references that support it. A new analysis MUST keep the earlier evidence addressable by its revision. | REQ-001, REQ-004, [ADR-0018](docs/adr/adr-0018-automated-map-publication.md) | CONF-001, CONF-008 |
+| SPEC-022 | When analysis of an accepted merge fails, Narys MUST show the unresolved analysis gap and identify the displayed map revision. Narys MUST retry recoverable failures independently of user sessions. An unresolved gap stays visible during retry and clears when analysis resolves it. Public status is subject to SPEC-014. | REQ-001, [UX-009](EXPERIENCE.md#15-gaps-in-merge-analysis), [ADR-0005](docs/adr/adr-0005-merge-detection.md) | CONF-014 |
+| SPEC-023 | While an earlier merge is unresolved, Narys MUST show a later architecture change in Recent merges when its own before-and-after evidence supports it independently of the missing analysis. The comparison MUST identify the later merge's own revisions under SPEC-007. Narys MUST retain the last supported area map and its revision while the available evidence is insufficient to advance that view. | REQ-001, [UX-009](EXPERIENCE.md#15-gaps-in-merge-analysis) | CONF-014 |
+| SPEC-024 | Protected access MUST require an unexpired session, the current workspace role, and current verified repository access for that user. Narys MUST deny protected requests after any of those conditions fails. At session expiry, the user signs in again. | REQ-004, REQ-005, [ADR-0013](docs/adr/adr-0013-workspace-access.md) | CONF-015 |
+
+SPEC-002 and SPEC-003 recorded the earlier maintainer confirmation flow. SPEC-020 and SPEC-021 replace them for automated publication and provenance.
+
+### Evidence for a change claim
+
+For SPEC-008 and SPEC-020, check the claimed source path at the displayed commit. Follow the relevant caller, handler registration, and configuration when the relationship depends on them. A claim that a path was added or removed also requires evidence from the prior commit. Cite the decisive source in the result. [Source correspondence decision](docs/adr/adr-0008-map-update-evidence.md) · [Automated map decision](docs/adr/adr-0018-automated-map-publication.md)
+
+| Outcome | Example for PR #128 |
+|---|---|
+| Supported by source | The merged code registers the worker for the retry job. The registered handler consumes that job and calls Payments API again. This supports a worker retry path. |
+| Unconfirmed | Checkout's failure handler queues the worker job. The available code leaves open whether a helper or configuration still enables a direct retry. The worker path and Checkout's current behavior have separate evidence statuses. |
+| Possible divergence | The PR says Checkout stopped retrying directly. The merged source still connects its failure handler to a direct retry under the conditions in question. Cite that path alongside the PR claim. |
+
+Source support records what the automated check establishes from pinned code. A supporting observation at an earlier revision remains evidence for that revision. An observed test result or deployment has its own scope, revision, and evidence. [Flask worked example](docs/research/2026-11-27-flask-merge-reference-case.md#source-correspondence-check)
+
+## 4. Conformance cases
+
+| ID | Covers | Scenario and pass criterion |
+|---|---|---|
+| CONF-001 | SPEC-001, SPEC-020, SPEC-021 | Configure the same area from a path and a description. Close the browser. Check that each map publishes automatically with the expected revision, source references, and any material gap labeled unconfirmed. Reopen and inspect the saved map. Use a second description with two plausible areas to check ambiguity. |
+| CONF-002 | SPEC-004 | Open a protected workspace as an eligible viewer, maintainer, ineligible account, and anonymous visitor. Check page and data permissions. A viewer can inspect. Only the maintainer can submit setup through the workspace. Repeat after the role is revoked. |
+| CONF-003 | SPEC-005 | Deliver a signed qualifying PR and branch update in both orders. Inspect durable event acceptance before acknowledgement. Invalid signature, unrelated installation or repository, wrong branch, and unmerged PR events produce no in-scope merge work. |
+| CONF-004 | SPEC-006, SPEC-007 | Replay human and agent architecture merges using merge commit, squash, and multi-commit rebase examples. Compare displayed revisions with GitHub's branch history. A standalone retry-limit change stays out of the architecture list. A multi-PR branch update with supported source change and uncertain attribution shows the supported change under its branch revisions. |
+| CONF-005 | SPEC-006, SPEC-008, SPEC-009 | Test a complete retry responsibility transfer, synthetic PR #128, and a claim contradicted by source. For the complete transfer, the workspace identifies the prior and new owners and cites both revisions. For #128, the worker's registration and handler support its retry path. Checkout retry behavior remains unconfirmed when a relevant binding cannot be resolved, even if the cited Checkout file exists. The earlier revision keeps its supported state. A contradictory claim displays the evidence and possible divergence. |
+| CONF-006 | SPEC-010, SPEC-011 | Use a merge with linked rationale and a merge with no record of the reason. Observe the source link and the missing state respectively. Add deployment evidence for one environment after merge. Confirm only the matched environment and revision. |
+| CONF-007 | SPEC-013 | Using the keyboard, open Recent merges, inspect a merge, switch the comparison revision, read an affected relationship, and follow its evidence. Close details and the panel, and observe focus return at both levels. |
+| CONF-008 | SPEC-012, SPEC-020, SPEC-021 | Interrupt processing before publication. Reconcile one received merge and one missed merge from GitHub history, then replay both deliveries with no user session. The map keeps its prior revision during the interruption. After recovery, Recent merges lists each supported change once and the map identifies the revision it describes. The earlier revision and evidence remain available for comparison. |
+| CONF-009 | SPEC-014 | Open a published workspace in a fresh session. Compare a merge and follow its public evidence. Inspect page and data responses for a claim that depends on private evidence. The public response excludes the claim and private source. The signed-in inspection still follows SPEC-004. Repeat the guest task with the Narys showcase before launch. |
+| CONF-010 | SPEC-015 | Open a published workspace. Withdraw publication and check that the next page and data requests contain no workspace data, including repeat requests through a cache. With publication enabled, make GitHub return private visibility or fail when verification is due. Check that the workspace data becomes unavailable within the proposed verification window. In the outage case, verify that a successful public recheck restores eligible access. |
+| CONF-011 | SPEC-016 | Run the same public or synthetic evidence through configured hosted and Ollama routes. Observe destination and payload. Repeat with Ollama down while hosted inference is configured separately. The local request fails within its boundary and the hosted route receives no evidence from it. |
+| CONF-012 | SPEC-017 | Set up an ordinary public-repository workspace and a private-repository workspace. Confirm that both deny anonymous page and data reads by default. Enable publication for the public one and confirm access on those same endpoints. Attempt publication for the private one and confirm that anonymous reads are still denied. |
+| CONF-013 | SPEC-018, SPEC-019 | Leave the workspace open on an earlier comparison, then deliver synthetic #128 and hold analysis in progress. Observe the status and revision, confirm the status is available to assistive technology, and check that focus and the comparison stay in place. Complete analysis. Without reloading, observe #128 in Recent merges and no remaining in-progress status. Confirm that closing the older comparison exposes the updated map. Repeat with a merge whose completed analysis finds no architecture change and check that the status clears and no architecture entry appears. |
+| CONF-014 | SPEC-022, SPEC-023 | Fail a recoverable source read for #128, then deliver #129 with an independently supported relationship change. Observe the open #128 gap and the #129 comparison with its own source revisions. With insufficient evidence for the whole area's newer map, the canvas retains its last supported revision. Repeat with a later claim that depends on the missing evidence and check that no supported change is asserted for it. Restore the failed read and observe automatic recovery, the resolved gap, and one entry for each supported change. |
+| CONF-015 | SPEC-024 | Open a protected workspace in an active session. Revoke the local role and verify that the next protected request is denied. In a separate run, remove repository access in GitHub and verify denial by the proposed recheck deadline. Repeat with an expired session and with GitHub unavailable when repository access must be rechecked. |
+
+For intended-use validation, ask an engineer to explain a real merge using the map. Check that they can identify the affected behavior, find the recorded reason, and state what is known about deployment. Compare with the team's normal GitHub handoff. This is a separate test of usefulness. [V1 release acceptance](docs/requirements/product.md#release-acceptance) · [Verification policy](REVIEW.md)
+
+## 5. Proposed access timing
+
+These pilot bounds are proposed for approval with this specification. Authorization decisions continue to apply to both page requests and their data requests.
+
+| Scope | Proposed limit |
+|---|---|
+| Public repository visibility | Use a successful check for at most 60 seconds. Once due, withhold public content until GitHub confirms eligibility. Take effect on the next request when local publication is withdrawn or loss of public eligibility is known. |
+| Signed-in repository access | Use a successful access check for at most 60 seconds per user. Check the local role on every protected request. |
+| Signed-in session | End the session within eight hours of GitHub sign-in, or at the provider user token's expiry if earlier. |
+
+One 60-second window per repository or active user keeps verification traffic proportional to scope in the one-repository pilot. GitHub documents authenticated rate limits and an eight-hour lifetime for expiring GitHub App user access tokens. Use a response caching policy that prevents reuse of protected and public workspace responses without authorization. Verify all bounds through the integrated access and withdrawal cases. [GitHub rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) · [GitHub App token expiry](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens) · [HTTP caching](https://datatracker.ietf.org/doc/html/rfc9111#section-5.2.2.5)

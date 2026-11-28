@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Payments · Narys workspace prototype</title>
+    <link rel="stylesheet" href="workspace.css">
+    <script src="workspace.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Skip to workspace</a>
+    <header class="app-header">
+      <div class="identity">
+        <span class="wordmark"><span class="mark" aria-hidden="true">▦</span>Narys</span>
+        <span class="repository">storefront / payments</span>
+      </div>
+      <nav class="entry-switch" aria-label="Prototype views">
+        <a href="?entry=canvas" data-entry="canvas">Canvas first</a>
+        <a href="?entry=changes" data-entry="changes">Recent changes first</a>
+        <a href="?entry=setup" data-entry="setup">Starting map review</a>
+      </nav>
+    </header>
+    <main id="workspace" tabindex="-1"></main>
+    <footer class="app-footer">Local prototype · synthetic repository data</footer>
+    <dialog id="reference-dialog" aria-labelledby="reference-title">
+      <div class="dialog-body" id="reference-body"></div>
+      <form method="dialog" class="dialog-actions"><button type="submit" class="secondary">Close</button></form>
+    </dialog>
+    <noscript>Enable JavaScript to try the workspace flows.</noscript>
+  </body>
+</html>
